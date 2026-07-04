@@ -1910,6 +1910,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const localScript = salesScript[bookingSession.lang];
 
+    // Disable input fields to prevent parallel messages
+    if (chatbotInput) chatbotInput.disabled = true;
+    const submitBtn = chatbotForm ? chatbotForm.querySelector('button[type="submit"]') : null;
+    if (submitBtn) submitBtn.disabled = true;
+
     // Show thinking indicator
     const loadingMsgId = appendBotMessage(bookingSession.lang === 'vi' ? 'Bé Hai đang trả lời... ⏳' : 'Bé Hai is typing... ⏳');
     
@@ -1929,6 +1934,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const loadingEl = document.getElementById(loadingMsgId);
       if (loadingEl) loadingEl.remove();
 
+      // Re-enable inputs
+      if (chatbotInput) {
+        chatbotInput.disabled = false;
+        chatbotInput.focus();
+      }
+      if (submitBtn) submitBtn.disabled = false;
+
       if (data.reply) {
         appendBotMessage(data.reply);
       } else {
@@ -1939,6 +1951,13 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Chatbot API failed:', err);
       const loadingEl = document.getElementById(loadingMsgId);
       if (loadingEl) loadingEl.remove();
+
+      // Re-enable inputs
+      if (chatbotInput) {
+        chatbotInput.disabled = false;
+        chatbotInput.focus();
+      }
+      if (submitBtn) submitBtn.disabled = false;
 
       appendBotMessage(localScript.fallbackMsg);
     });
