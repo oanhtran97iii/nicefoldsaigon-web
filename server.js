@@ -431,14 +431,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve Static Site Files
-app.use(express.static(path.join(__dirname)));
-
-// Redirect /admin and /admin/ to index.html
-app.get(['/admin', '/admin/'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
-});
-
 // --- Compatibility Routing for api.php endpoints ---
 app.all('/api.php', async (req, res) => {
     const action = req.query.action || req.body.action || '';
@@ -905,6 +897,14 @@ app.all('/api.php', async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 });
+
+// Redirect /admin and /admin/ to index.html
+app.get(['/admin', '/admin/'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
+
+// Serve Static Site Files
+app.use(express.static(path.join(__dirname)));
 
 // Start Server
 app.listen(PORT, () => {
