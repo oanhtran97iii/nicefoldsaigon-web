@@ -690,122 +690,43 @@
         <div class="modal-logo-container">
           <img src="logo.png" alt="Nice Fold Saigon" class="modal-logo-img">
         </div>
-        <h3 class="modal-title">Confirm & Pay</h3>
-        <p class="modal-subtitle">Your order has been registered. Scan the QR to pay the estimated amount to confirm instantly.</p>
+        <h3 class="modal-title">Confirm Booking / Xác nhận đặt lịch</h3>
+        <p class="modal-subtitle">Your order has been registered. Please select a chat platform below to send your details and finalize your booking.</p>
         
         <!-- Summary Box -->
         <div class="modal-summary-box">
           <div class="summary-title">Order Details / Chi tiết đơn</div>
           <div class="summary-row">
-            <span>Booking Code:</span>
-            <strong id="modalCode">NF1029</strong>
+            <span>Booking Code / Mã đặt lịch:</span>
+            <strong id="modalCode" style="color: var(--color-pink);">NF1029</strong>
           </div>
           <div class="summary-row">
-            <span>Service Gói giặt:</span>
+            <span>Service / Gói dịch vụ:</span>
             <span id="modalService">Same-day Wash & Fold</span>
           </div>
           <div class="summary-row">
-            <span>Pickup / Thời gian:</span>
+            <span>Pickup / Thời gian nhận:</span>
             <span id="modalPickupTime">30/06/2026, 10:02 PM</span>
           </div>
           <div class="summary-row">
-            <span>Hotel & Room / Phòng:</span>
+            <span>Hotel & Room / Khách sạn & Phòng:</span>
             <span id="modalHotelDetails">Caravelle Hotel, P. 502</span>
           </div>
-        </div>
-
-        <!-- Side-by-Side Flex Layout (QR & Bank details) -->
-        <div class="modal-payment-flex">
-          <div class="modal-payment-left">
-            <div class="modal-qr-box" style="margin-bottom: 0;">
-              <div class="modal-qr-scan-line"></div>
-              <img id="modalQrCodeImage" src="logo.png" alt="VietQR Pay Code" class="modal-qr-image">
-            </div>
-          </div>
-          <div class="modal-payment-right">
-            <div class="modal-bank-label">Bank / Ngân hàng</div>
-            <div class="modal-bank-value">TPBank</div>
-            
-            <div class="modal-bank-label">Account / Số TK</div>
-            <div class="modal-bank-value-row">
-              <span id="modalBankAccount" style="font-family: monospace; font-weight:700;">00005547335</span>
-              <button class="modal-copy-btn" onclick="copyModalText('modalBankAccount', 'Copied!')">Copy</button>
-            </div>
-            
-            <div class="modal-bank-label">Holder / Chủ TK</div>
-            <div class="modal-bank-value" style="font-size: 0.75rem; margin-bottom: 0;">TRAN THI HOANG OANH</div>
+          <div class="summary-row" style="border-top: 1px dashed #e2e8f0; margin-top: 8px; padding-top: 8px;">
+            <span>Estimated Total / Tổng tiền tạm tính:</span>
+            <strong id="modalPayAmount" style="font-size: 1.15rem; color: var(--color-navy);">0 VND</strong>
           </div>
         </div>
 
-        <!-- Price & Content copy table -->
-        <div class="modal-details-list">
-          <div class="modal-detail-row">
-            <span class="detail-label">Amount / Số tiền:</span>
-            <span class="modal-detail-value highlight-amount">
-              <span id="modalPayAmount">0 VND</span>
-              <button class="modal-copy-btn-dark" id="modalCopyAmountBtn">Copy</button>
-            </span>
-          </div>
-          <div class="modal-detail-row">
-            <span class="detail-label">Description / Nội dung:</span>
-            <span class="modal-detail-value">
-              <span id="modalPayContent" class="modal-highlight-content">NF12345</span>
-              <button class="modal-copy-btn-dark" id="modalCopyContentBtn">Copy</button>
-            </span>
-          </div>
+        <!-- Action Buttons (WhatsApp & Zalo) -->
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem; width: 100%;">
+          <a id="modalWhatsAppBtn" href="#" target="_blank" class="pill-button btn-whatsapp" style="display: flex; justify-content: center; align-items: center; text-decoration: none; font-weight: 800; font-size: 1.05rem; padding: 12px 24px; width: 100%; border: none;">
+            💬 Gửi qua WhatsApp / Send via WhatsApp
+          </a>
+          <button id="modalZaloBtn" type="button" class="pill-button btn-zalo" style="display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.05rem; padding: 12px 24px; width: 100%; border: none; cursor: pointer;">
+            💬 Gửi qua Zalo / Send via Zalo (Copy)
+          </button>
         </div>
-
-        <!-- Real-time checking bar -->
-        <div class="modal-status-bar" id="modalStatusBar">
-          <div class="modal-status-spinner-row">
-            <div class="modal-status-spinner"></div>
-            <span>Waiting for your transfer...</span>
-          </div>
-          <span class="modal-status-sub">Đang chờ hệ thống tự động xác nhận chuyển khoản...</span>
-        </div>
-      </div>
-
-      <!-- Billing Success view -->
-      <div id="checkoutSuccessView" style="display: none;">
-        <div class="modal-success-icon-wrapper">
-          <span class="modal-success-icon">✓</span>
-        </div>
-        <h3 class="modal-success-title">Payment Confirmed!</h3>
-        <p class="modal-success-text">
-          Thank you! We have successfully received payment for booking code <strong id="modalSuccessContentCode" style="color: var(--color-pink);">NF12345</strong>.<br>
-          Your laundry is now being processed.
-        </p>
-        
-        <div class="modal-details-list" style="background: #f0fff4; border-color: #c6f6d5; margin-bottom: 24px;">
-          <div class="modal-detail-row" style="border-bottom-color: #c6f6d5;">
-            <span class="detail-label" style="color: #276749;">Amount Received:</span>
-            <strong class="modal-detail-value" style="color: #22543d; font-size: 1.1rem;" id="modalSuccessAmount">0 VND</strong>
-          </div>
-          <div class="modal-detail-row" style="border-bottom: none;">
-            <span class="detail-label" style="color: #276749;">Status / Trạng thái:</span>
-            <strong class="modal-detail-value" style="color: #22543d;">Auto-Verified</strong>
-          </div>
-        </div>
-
-        <button class="pill-button btn-primary btn-block" style="padding: 12px;" onclick="closeCheckoutModal()">
-          Close / Đóng
-        </button>
-      </div>
-
-      <!-- Billing Cash view -->
-      <div id="checkoutCashView" style="display: none;">
-        <div class="modal-success-icon-wrapper" style="background: rgba(4, 29, 64, 0.05); color: var(--color-navy);">
-          <span class="modal-success-icon">✓</span>
-        </div>
-        <h3 class="modal-success-title" style="color: var(--color-navy);">Order Confirmed!</h3>
-        <p class="modal-success-text">
-          Thank you! Your order has been successfully registered with booking code <strong id="modalCashContentCode" style="color: var(--color-pink);">NF12345</strong>.<br>
-          Please prepare cash payment of <strong id="modalCashAmount" style="color: var(--color-navy);">0 VND</strong> when our driver returns your fresh laundry.
-        </p>
-        
-        <button class="pill-button btn-primary btn-block" style="padding: 12px; margin-top: 1.5rem;" onclick="closeCheckoutModal()">
-          Close / Đóng
-        </button>
       </div>
     </div>
   </div>

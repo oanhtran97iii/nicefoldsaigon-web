@@ -803,38 +803,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Define action to proceed to Chat & Payment
       const proceedToChatAndPayment = () => {
-        if (paymentMethod === 'cash') {
-          // Play audio chime
-          try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+        const hotelDetailsStr = `${hotelAddress}, Room: ${roomNumber ? roomNumber : 'Reception'}`;
+        const isVi = (localStorage.getItem('site_lang') || 'en') === 'vi';
+        
+        const messageText = isVi ? 
+`Yêu cầu đặt lịch giặt ủi Nice Fold Saigon
+---------------------------------------
+📌 Mã đơn: ${bookingCode}
+👤 Khách hàng: ${name}
+📞 SĐT liên hệ: ${clientWhatsapp}
+📦 Gói dịch vụ: ${rateConfig.label}
+⚖️ Khối lượng dự kiến: ${weight} kg
+🛵 Giao nhận: ${pickupTypeLabel}
+🏢 Khách sạn: ${hotelAddress}
+🚪 Số phòng: ${roomNumber}
+⏰ Thời gian nhận đồ: ${pickupTime}
+💵 Phương thức thanh toán: ${paymentMethod === 'cash' ? 'Tiền mặt (Cash)' : 'Chuyển khoản (Bank Transfer)'}
+💵 Tổng tiền tạm tính: ${formattedVnd} (${formattedUsd})`
+:
+`Nice Fold Saigon - Laundry Booking Request
+---------------------------------------
+📌 Booking Code: ${bookingCode}
+👤 Customer Name: ${name}
+📞 Contact Phone: ${clientWhatsapp}
+📦 Service Package: ${rateConfig.label}
+⚖️ Est. Weight: ${weight} kg
+🛵 Pickup Option: ${pickupTypeLabel}
+🏢 Hotel Address: ${hotelAddress}
+🚪 Room Number: ${roomNumber}
+⏰ Preferred Pickup Time: ${pickupTime}
+💵 Payment Method: ${paymentMethod === 'cash' ? 'Cash' : 'Bank Transfer'}
+💵 Estimated Total: ${formattedVnd} (${formattedUsd})`;
 
-            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
-          } catch(err) {}
-
-          // Show Cash Success Modal view
-          document.getElementById('modalCashContentCode').textContent = bookingCode;
-          document.getElementById('modalCashAmount').textContent = formattedVnd;
-
-          document.getElementById('checkoutBillingView').style.display = 'none';
-          document.getElementById('checkoutSuccessView').style.display = 'none';
-          document.getElementById('checkoutCashView').style.display = 'block';
-          document.getElementById('checkoutModal').style.display = 'flex';
-
-          if (typeof triggerModalConfetti === 'function') {
-            triggerModalConfetti();
-          }
-        } else {
-          // Trigger bank payment checkout popup directly on this page
-          const hotelDetailsStr = `${hotelAddress}, Room: ${roomNumber ? roomNumber : 'Reception'}`;
-          window.triggerCheckoutModal(totalVnd, bookingCode, rateConfig.label, pickupTime, hotelDetailsStr);
-        }
+        window.triggerCheckoutModal(totalVnd, bookingCode, rateConfig.label, pickupTime, hotelDetailsStr, messageText);
       };
 
       // Send data to PHP API Webhook, then execute checkout popup
@@ -2631,53 +2632,36 @@ window.copyModalText = function(elementId, successText) {
   });
 };
 
-window.triggerCheckoutModal = function(amount, desc, serviceLabel, pickupTimeStr, hotelDetailsStr) {
+window.triggerCheckoutModal = function(amount, desc, serviceLabel, pickupTimeStr, hotelDetailsStr, messageText) {
   document.getElementById('modalCode').textContent = desc;
   document.getElementById('modalService').textContent = serviceLabel;
   document.getElementById('modalPickupTime').textContent = pickupTimeStr;
   document.getElementById('modalHotelDetails').textContent = hotelDetailsStr;
   document.getElementById('modalPayAmount').textContent = amount.toLocaleString('vi-VN') + ' VND';
-  document.getElementById('modalPayContent').textContent = desc;
-  document.getElementById('modalQrCodeImage').src = `https://qr.sepay.vn/img?acc=00005547335&bank=TPBank&amount=${amount}&des=${desc}`;
+
+  // Setup WhatsApp redirect link
+  const waLink = "https://wa.me/84373991602?text=" + encodeURIComponent(messageText);
+  const waBtn = document.getElementById('modalWhatsAppBtn');
+  if (waBtn) waBtn.href = waLink;
+
+  // Setup Zalo proceed copy-paste handler
+  const zaloBtn = document.getElementById('modalZaloBtn');
+  if (zaloBtn) {
+    zaloBtn.onclick = function() {
+      navigator.clipboard.writeText(messageText).then(() => {
+        const isVi = (localStorage.getItem('site_lang') || 'en') === 'vi';
+        const alertMsg = isVi ? 
+          '📝 Thông tin đặt lịch đã được sao chép vào bộ nhớ tạm!\n\nĐang mở Zalo. Vui lòng dán (paste) nội dung đã sao chép vào khung chat Zalo với chúng tôi để xác nhận đơn.' :
+          '📝 Booking details copied to clipboard!\n\nOpening Zalo now. Please paste the copied text into our Zalo chat to confirm your booking.';
+        alert(alertMsg);
+        window.open('https://zalo.me/0373991602', '_blank');
+      });
+    };
+  }
 
   // Reset modal state and show Billing View
   document.getElementById('checkoutBillingView').style.display = 'block';
-  document.getElementById('checkoutSuccessView').style.display = 'none';
   document.getElementById('checkoutModal').style.display = 'flex';
-
-  // Bind inline copy button handlers
-  const copyAmountBtn = document.getElementById('modalCopyAmountBtn');
-  if (copyAmountBtn) {
-    copyAmountBtn.onclick = function() {
-      navigator.clipboard.writeText(amount.toString()).then(() => {
-        const originalText = copyAmountBtn.textContent;
-        copyAmountBtn.textContent = 'Copied!';
-        copyAmountBtn.classList.add('copied');
-        setTimeout(() => {
-          copyAmountBtn.textContent = originalText;
-          copyAmountBtn.classList.remove('copied');
-        }, 2000);
-      });
-    };
-  }
-
-  const copyContentBtn = document.getElementById('modalCopyContentBtn');
-  if (copyContentBtn) {
-    copyContentBtn.onclick = function() {
-      navigator.clipboard.writeText(desc).then(() => {
-        const originalText = copyContentBtn.textContent;
-        copyContentBtn.textContent = 'Copied!';
-        copyContentBtn.classList.add('copied');
-        setTimeout(() => {
-          copyContentBtn.textContent = originalText;
-          copyContentBtn.classList.remove('copied');
-        }, 2000);
-      });
-    };
-  }
-
-  // Start background n8n status checking
-  startModalPolling(amount, desc);
 };
 
 function startModalPolling(targetAmount, targetDesc) {
