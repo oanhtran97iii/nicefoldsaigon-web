@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 
@@ -560,7 +560,7 @@ app.use(cors());
 app.use(express.json());
 
 // Set up Streamable HTTP Transport
-const transport = new NodeStreamableHTTPServerTransport({
+const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: () => randomUUID()
 });
 
