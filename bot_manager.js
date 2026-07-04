@@ -277,12 +277,12 @@ async function sendOrderAlert(order) {
   const text = `🛎️ <b>ĐƠN HÀNG MỚI / NEW ORDER</b>
 ---------------------------------------
 📌 Mã đơn: <code>${order.bookingCode}</code>
-👤 Khách hàng: <b>${order.name}</b>
-📞 SĐT liên hệ: <code>${order.phone}</code>
+⏰ Giờ lấy hàng: ${order.pickupTime}
+👤 Nhận hàng từ ai: <b>${order.name}</b>
 📦 Gói dịch vụ: <b>${order.service}</b>
-🏢 Khách sạn: ${order.hotelAddress}
-🚪 Số phòng: ${order.roomNumber}
-⏰ Thời gian nhận đồ: ${order.pickupTime}
+🚪 Tên - số phòng: <b>${order.name} - P.${order.roomNumber || 'Không có/Not provided'}</b>
+📞 Số điện thoại: <code>${order.phone}</code>
+🏢 Khách sạn/địa chỉ: ${order.hotelAddress}
 💵 Thanh toán: ${order.paymentMethod === 'cash' ? 'Tiền mặt (Cash)' : 'Chuyển khoản (Bank Transfer)'}
 💰 Tổng cước tạm tính: <b>${(order.totalVnd || 0).toLocaleString('vi-VN')} VND</b>`;
 
