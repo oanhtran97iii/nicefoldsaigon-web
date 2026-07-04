@@ -431,10 +431,52 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- Basic Authentication Middleware ---
+const basicAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        res.setHeader('WWW-Authenticate', 'Basic realm="Nice Fold Saigon Admin"');
+        return res.status(401).send('Authentication required');
+    }
+
+    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+    const user = auth[0];
+    const pass = auth[1];
+
+    const ADMIN_USER = process.env.ADMIN_USER || 'nf-admin';
+    const ADMIN_PASS = process.env.ADMIN_PASS || 'nicefoldsg@190';
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        return next();
+    }
+
+    res.setHeader('WWW-Authenticate', 'Basic realm="Nice Fold Saigon Admin"');
+    return res.status(401).send('Invalid credentials');
+};
+
 // --- Compatibility Routing for api.php endpoints ---
 app.all('/api.php', async (req, res) => {
     const action = req.query.action || req.body.action || '';
     const method = req.method;
+
+    // Protect admin actions with Basic Auth
+    const adminActions = ['orders', 'customers', 'save-product', 'save-customer', 'save-order', 'delete'];
+    if (adminActions.includes(action)) {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            res.setHeader('WWW-Authenticate', 'Basic realm="Nice Fold Saigon Admin API"');
+            return res.status(401).send('Authentication required');
+        }
+        const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+        const user = auth[0];
+        const pass = auth[1];
+        const ADMIN_USER = process.env.ADMIN_USER || 'nf-admin';
+        const ADMIN_PASS = process.env.ADMIN_PASS || 'nicefoldsg@190';
+        if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
+            res.setHeader('WWW-Authenticate', 'Basic realm="Nice Fold Saigon Admin API"');
+            return res.status(401).send('Invalid credentials');
+        }
+    }
 
     try {
         switch (action) {
@@ -898,10 +940,11 @@ app.all('/api.php', async (req, res) => {
     }
 });
 
-// Redirect /admin and /admin/ to index.html
-app.get(['/admin', '/admin/'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+// Serve Admin Static Files behind Auth
+app.get('/admin', basicAuth, (req, res) => {
+    res.redirect('/admin/');
 });
+app.use('/admin/', basicAuth, express.static(path.join(__dirname, 'admin')));
 
 // Serve Static Site Files
 app.use(express.static(path.join(__dirname)));
