@@ -831,12 +831,33 @@ app.all('/api.php', async (req, res) => {
                         [bookingCode, body.customer_id, productId, body.amount, body.status || 'pending', body.order_date || new Date().toISOString()]
                     );
 
-                    // Send confirmation email
-                    const cust = await dbGet("SELECT name, email FROM customers WHERE id = ?", [body.customer_id]);
+                    // Send confirmation email & Telegram notification
+                    const cust = await dbGet("SELECT name, email, phone, hotel, room FROM customers WHERE id = ?", [body.customer_id]);
+                    const prodRow = await dbGet("SELECT name FROM products WHERE id = ?", [productId]);
+                    const prodName = prodRow ? prodRow.name : "Laundry Service";
+                    
                     if (cust && cust.email) {
-                        const prodRow = await dbGet("SELECT name FROM products WHERE id = ?", [productId]);
-                        const prodName = prodRow ? prodRow.name : "Laundry Service";
                         setTimeout(() => sendBookingConfirmation(cust.name, cust.email, prodName, body.amount, bookingCode), 0);
+                    }
+
+                    // Trigger Telegram group notification for manually created orders
+                    if (cust) {
+                        try {
+                            botManager.sendOrderAlert({
+                                bookingCode: bookingCode,
+                                name: cust.name,
+                                phone: cust.phone || '',
+                                service: prodName,
+                                hotelAddress: cust.hotel || '',
+                                roomNumber: cust.room || '',
+                                pickupTime: body.order_date || new Date().toLocaleString(),
+                                paymentMethod: 'cash',
+                                totalVnd: body.amount,
+                                lang: 'vi'
+                            });
+                        } catch(err) {
+                            console.error('Failed to trigger manual order alert:', err);
+                        }
                     }
 
                     return res.json({ success: true, id: result.lastID });
