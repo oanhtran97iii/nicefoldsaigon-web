@@ -550,6 +550,56 @@ function createMcpServer() {
       }
     );
 
+    // 4. Tool: get_order_details
+    server.tool(
+      "get_order_details",
+      {
+        booking_code: z.string().describe("Mã đặt lịch cần tra cứu, ví dụ: NF1234")
+      },
+      async ({ booking_code }) => {
+        logCall("get_order_details", { booking_code });
+        const bCode = booking_code.trim().toUpperCase();
+
+        try {
+            const order = await dbGet(`
+                SELECT o.booking_code, o.status, o.amount, o.order_date,
+                       p.name as product_name, 
+                       c.hotel, c.room
+                FROM orders o
+                LEFT JOIN products p ON o.product_id = p.id
+                LEFT JOIN customers c ON o.customer_id = c.id
+                WHERE o.booking_code = ? OR o.id = ?
+            `, [bCode, bCode]);
+
+            if (!order) {
+                return {
+                    content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy thông tin đơn hàng với mã ${bCode}` }) }]
+                };
+            }
+
+            // Expose ONLY safe and non-sensitive data
+            const safeOrderDetails = {
+                success: true,
+                booking_code: order.booking_code,
+                status: order.status,
+                service: order.product_name,
+                hotel: order.hotel || '-',
+                room: order.room || '-',
+                amount: order.amount,
+                date: order.order_date
+            };
+
+            return {
+                content: [{ type: "text", text: JSON.stringify(safeOrderDetails) }]
+            };
+        } catch (err) {
+            return {
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
+            };
+        }
+      }
+    );
+
     return server;
 }
 
