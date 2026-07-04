@@ -1901,7 +1901,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Main chatbot response routing
+  // Main chatbot response routing (Hybrid Flow)
   const handleResponse = (id, text) => {
     // Language detection first
     const detectedLang = detectLanguage(text);
@@ -1910,6 +1910,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const localScript = salesScript[bookingSession.lang];
 
+    // --- INSTANT STATIC CHIP HANDLERS ---
+    if (id === 'sameday' || id === 'express' || id === 'standard' || id === 'other') {
+      const pack = localScript.packages[id];
+      appendBotMessage(pack.details);
+      renderChips([
+        { id: 'proceed_booking', label: localScript.proceedBookingChip },
+        { id: 'back_main', label: localScript.changePackageChip }
+      ]);
+      return;
+    }
+
+    if (id === 'back_main') {
+      showInitialMainMenu();
+      return;
+    }
+
+    if (id === 'qna') {
+      appendBotMessage(localScript.qnaListIntro);
+      const qnaChips = localScript.questions.slice(0, 5).map(q => ({ id: q.id, label: q.short }));
+      qnaChips.push({ id: 'back_main', label: localScript.backToMenuChip });
+      renderChips(qnaChips);
+      return;
+    }
+
+    if (id === 'proceed_booking') {
+      appendBotMessage(bookingSession.lang === 'vi' ? 
+        "Để đặt lịch nhận đồ nhanh chóng, bạn vui lòng chọn **Book Online** ở đầu trang hoặc click đường dẫn sau để mở Form đặt lịch: <a href='booking.html'>Trang Đặt Lịch</a>. Sau khi điền xong, hệ thống sẽ giúp bạn gửi thông tin sang Zalo hoặc WhatsApp chỉ với 1 click!" :
+        "To schedule your pickup, please click **Book Online** at the top of the page, or click here to open the Booking Form: <a href='booking.html'>Booking Page</a>. Once filled, you can send details directly to Zalo/WhatsApp with just 1 click!"
+      );
+      renderChips([
+        { id: 'back_main', label: localScript.mainMenuChip }
+      ]);
+      return;
+    }
+
+    // Direct match for FAQ ID
+    const qMatch = localScript.questions.find(q => q.id === id);
+    if (qMatch) {
+      appendBotMessage(qMatch.response);
+      renderChips([
+        { id: 'proceed_booking', label: localScript.proceedBookingChip },
+        { id: 'back_main', label: localScript.mainMenuChip }
+      ]);
+      return;
+    }
+
+    // --- DYNAMIC AI AGENT CHAT (Bé Hai) ---
     // Disable input fields to prevent parallel messages
     if (chatbotInput) chatbotInput.disabled = true;
     const submitBtn = chatbotForm ? chatbotForm.querySelector('button[type="submit"]') : null;
@@ -2309,45 +2356,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // First time greeting
     if (chatbotBody && chatbotBody.children.length === 0) {
       const isVi = bookingSession.lang === 'vi';
-      const loadingMsgId = appendBotMessage(isVi ? 'Bé Hai đang kết nối... ⏳' : 'Bé Hai is connecting... ⏳');
+      const welcomeMsg = isVi ?
+        "Xin chào! Tôi là Bé Hai, trợ lý giặt ủi Nice Fold Saigon. Tôi có thể giúp gì cho bạn hôm nay? 🧺 Hãy chọn một gói dịch vụ bên dưới để xem thông tin nhanh, hoặc đặt câu hỏi tự do cho tôi nhé!" :
+        "Hello! I am Bé Hai, your Nice Fold Saigon laundry assistant. How can I help you today? 🧺 Please choose one of our packages below for instant details, or ask me any question directly!";
       
-      let chatSessionId = localStorage.getItem('chatbot_session_id');
-      if (!chatSessionId) {
-        chatSessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('chatbot_session_id', chatSessionId);
-      }
-
-      const initialPrompt = isVi ? 
-        "Hãy gửi một lời chào thân thiện bằng Tiếng Việt giới thiệu bạn là Bé Hai trợ lý giặt ủi Nice Fold Saigon, hỏi tên khách và cách bạn có thể giúp đỡ họ hôm nay." :
-        "Send a friendly welcome greeting in English introducing yourself as Bé Hai, the Nice Fold Saigon laundry assistant, and ask for their name and how you can help them today.";
-
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: initialPrompt, sessionId: chatSessionId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const loadingEl = document.getElementById(loadingMsgId);
-        if (loadingEl) loadingEl.remove();
-
-        if (data.reply) {
-          appendBotMessage(data.reply);
-        } else {
-          appendBotMessage(isVi ? 
-            "Xin chào! Tôi là Bé Hai, trợ lý giặt ủi Nice Fold Saigon. Tôi có thể giúp gì cho bạn hôm nay? 🧺" : 
-            "Hello! I am Bé Hai, your Nice Fold Saigon laundry assistant. How can I help you today? 🧺");
-        }
-      })
-      .catch(err => {
-        console.error('Chatbot greeting failed:', err);
-        const loadingEl = document.getElementById(loadingMsgId);
-        if (loadingEl) loadingEl.remove();
-
-        appendBotMessage(isVi ? 
-          "Xin chào! Tôi là Bé Hai, trợ lý giặt ủi Nice Fold Saigon. Tôi có thể giúp gì cho bạn hôm nay? 🧺" : 
-          "Hello! I am Bé Hai, your Nice Fold Saigon laundry assistant. How can I help you today? 🧺");
-      });
+      appendBotMessage(welcomeMsg);
+      showInitialMainMenu();
     }
   };
 
