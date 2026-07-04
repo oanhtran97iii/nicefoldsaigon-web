@@ -1909,355 +1909,39 @@ document.addEventListener('DOMContentLoaded', () => {
       bookingSession.lang = detectedLang;
     }
     const localScript = salesScript[bookingSession.lang];
-    const normalized = text.toLowerCase();
 
-    // Accent-insensitive normalization utility
-    const stripAccents = (str) => {
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "d");
-    };
-
-    const matchKeyword = (sourceText, keyword) => {
-      if (!sourceText || !keyword) return false;
-      const cleanText = sourceText.toLowerCase();
-      const cleanKeyword = keyword.toLowerCase();
-      const wordCharPattern = 'a-zA-Z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
-      const escapedKeyword = cleanKeyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const boundaryRegex = new RegExp('(^|[^' + wordCharPattern + '])' + escapedKeyword + '($|[^' + wordCharPattern + '])', 'i');
-      return boundaryRegex.test(cleanText);
-    };
-
-    // Synonym mapping dictionary
-    const synonymDict = {
-      "giặt hấp": "giặt khô",
-      "giat hap": "giat kho",
-      "giặt là": "giặt ủi",
-      "giat la": "giat ui",
-      "hấp": "giặt khô",
-      "ủi đồ": "giặt ủi",
-      "ui do": "giat ui",
-      "ủi": "giặt ủi",
-      "ui": "giat ui",
-      "là đồ": "giặt ủi",
-      "la do": "giat ui",
-      "sơ mi": "áo sơ mi",
-      "so mi": "ao so mi",
-      "áo thun": "áo sơ mi",
-      "ao thun": "ao so mi",
-      "quần": "áo sơ mi",
-      "quan": "ao so mi",
-      "váy": "áo sơ mi",
-      "vay": "ao so mi",
-      "đầm": "áo sơ mi",
-      "dam": "ao so mi",
-      "sneaker": "giày",
-      "sneakers": "giày",
-      "giày thể thao": "giày",
-      "giay the thao": "giay",
-      "phơi gió": "phơi",
-      "phoi gio": "phoi",
-      "phơi khô": "phơi",
-      "phoi kho": "phoi",
-      "phơi tự nhiên": "phơi",
-      "phoi tu nhien": "phoi",
-      "không sấy": "phơi",
-      "khong say": "phoi",
-      "ad ơi": "cho hỏi",
-      "ad oi": "cho hoi",
-      "cho em hỏi": "cho hỏi",
-      "cho em hoi": "cho hoi",
-      "cho mình hỏi": "cho hỏi",
-      "cho minh hoi": "cho hoi",
-      "hỏi tí": "cho hỏi",
-      "hoi ti": "cho hoi",
-      "hello": "xin chào",
-      "hi": "xin chào",
-      "hey": "xin chào",
-      "chào": "xin chào",
-      "chào bạn": "xin chào",
-      "chào ad": "xin chào",
-      "chao": "xin chao"
-    };
-
-    let expandedText = normalized;
-    const wordCharPatternForSynonyms = 'a-zA-Z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
-    for (const [key, value] of Object.entries(synonymDict)) {
-      const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp('(^|[^' + wordCharPatternForSynonyms + '])' + escapedKey + '($|[^' + wordCharPatternForSynonyms + '])', 'gi');
-      if (regex.test(expandedText)) {
-        expandedText = expandedText.replace(regex, `$1${value}$2`);
-      }
-    }
-
-    const cleanInput = stripAccents(normalized);
-    const cleanExpanded = stripAccents(expandedText);
-
-    // Check if we are waiting for assistance reply
-    if (bookingSession.waitingForAssistanceReply) {
-      bookingSession.waitingForAssistanceReply = false;
-      const isYes = id === 'assistance_yes' || 
-                    matchKeyword(normalized, 'yes') || 
-                    matchKeyword(normalized, 'có') || 
-                    matchKeyword(normalized, 'co') || 
-                    matchKeyword(normalized, 'tiếp');
-      const isNo = id === 'assistance_no' || 
-                   matchKeyword(normalized, 'no') || 
-                   matchKeyword(normalized, 'không') || 
-                   matchKeyword(normalized, 'khong') || 
-                   matchKeyword(normalized, 'hủy') || 
-                   matchKeyword(normalized, 'chưa');
-      
-      if (isNo) {
-        appendBotMessage(bookingSession.lang === 'vi' ? 
-          "Dạ cảm ơn bạn! Chúc bạn một ngày tốt lành và hẹn gặp lại bạn lần sau nhé! 👋" : 
-          "Thank you! Have a great day and see you next time! 👋");
-        showInitialMainMenu();
-        return;
-      }
-      
-      if (isYes) {
-        appendBotMessage(bookingSession.lang === 'vi' ? 
-          "Tôi có thể giúp gì thêm cho bạn? Vui lòng đặt câu hỏi hoặc chọn một dịch vụ dưới đây:" : 
-          "How can we help you? Please ask your question or select a service below:");
-        showInitialMainMenu();
-        return;
-      }
-      // If it's something else, let it fall through to match normal FAQs!
-    }
-
-    // Check cancel/no actions
-    const isNoAction = id === 'cancel' || 
-                       ((!bookingSession.active) && (normalized === 'cancel' || normalized === 'hủy' || normalized === 'no' || normalized === 'không' || normalized === 'khong' || normalized === 'chưa' || normalized === 'chua'));
+    // Show thinking indicator
+    const loadingMsgId = appendBotMessage(bookingSession.lang === 'vi' ? 'Bé Hai đang trả lời... ⏳' : 'Bé Hai is typing... ⏳');
     
-    if (isNoAction) {
-      bookingSession.active = false;
-      bookingSession.step = 0;
-      bookingSession.userResponseText = '';
-      appendBotMessage(localScript.cancelGreeting);
-      showInitialMainMenu();
-      return;
+    let chatSessionId = localStorage.getItem('chatbot_session_id');
+    if (!chatSessionId) {
+      chatSessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('chatbot_session_id', chatSessionId);
     }
 
-    // --- STEP-BY-STEP BOOKING FLOW ACTIVE ---
-    if (bookingSession.active) {
-      // Check if user is asking an FAQ or irrelevant question instead of providing details
-      const isNotProvidingDetails = checkMissingFields(text).length === 4;
-      if (isNotProvidingDetails) {
-        const faqMatch = localScript.questions.find(q => 
-          q.keywords.some(k => {
-            const cleanK = stripAccents(k.toLowerCase());
-            return matchKeyword(normalized, k) || 
-                   matchKeyword(expandedText, k) || 
-                   matchKeyword(cleanInput, cleanK) || 
-                   matchKeyword(cleanExpanded, cleanK);
-          })
-        );
-        if (faqMatch) {
-          appendBotMessage(faqMatch.response);
-        } else {
-          appendBotMessage(localScript.fallbackMsg);
-        }
-        appendBotMessage(bookingSession.lang === 'vi' ? 
-          "Bạn có muốn tiếp tục điền thông tin đặt lịch không?" : 
-          "Would you like to continue with your booking?");
-        
-        // Deactivate booking flow so subsequent questions match normally
-        bookingSession.active = false;
-        
-        renderChips([
-          { id: 'proceed_booking', label: localScript.continueBookingChip },
-          { id: 'cancel', label: localScript.cancelBookingChip }
-        ]);
-        return;
-      }
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, sessionId: chatSessionId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const loadingEl = document.getElementById(loadingMsgId);
+      if (loadingEl) loadingEl.remove();
 
-      processBookingStep(text, id);
-      return;
-    }
-
-    // --- NORMAL FAQS & NAVIGATION FLOW ---
-    if (id === 'sameday' || id === 'express' || id === 'standard' || id === 'other') {
-      const pack = localScript.packages[id];
-      bookingSession.data.packageId = id;
-      bookingSession.data.packageName = pack.title;
-      appendBotMessage(pack.details);
-      
-      renderChips([
-        { id: 'proceed_booking', label: localScript.proceedBookingChip },
-        { id: 'back_main', label: localScript.changePackageChip },
-        { id: 'qna', label: localScript.askQuestionChip }
-      ]);
-      return;
-    }
-
-    if (id === 'proceed_booking' || normalized.includes('proceed booking') || normalized.includes('đặt lịch') || id === 'buy') {
-      if (bookingSession.userResponseText) {
-        bookingSession.active = true;
-        bookingSession.step = 1;
-        processBookingStep('', '');
+      if (data.reply) {
+        appendBotMessage(data.reply);
       } else {
-        startBookingFlow();
-      }
-      return;
-    }
-
-    if (id === 'back_main' || normalized === 'back' || normalized === 'quay lại') {
-      showInitialMainMenu();
-      return;
-    }
-
-    if (id === 'qna' || normalized.includes('question') || normalized.includes('hỏi')) {
-      appendBotMessage(localScript.qnaListIntro);
-      
-      const qnaChips = localScript.questions.map(q => ({ id: q.id, label: q.short }));
-      qnaChips.push({ id: 'back_main', label: localScript.backToMenuChip });
-      renderChips(qnaChips);
-      return;
-    }
-
-    // Direct match for FAQ ID
-    const qMatch = localScript.questions.find(q => q.id === id);
-    if (qMatch) {
-      appendBotMessage(qMatch.response);
-      if (qMatch.id === 'thankyou') {
-        bookingSession.waitingForAssistanceReply = true;
-        renderChips([
-          { id: 'assistance_yes', label: bookingSession.lang === 'vi' ? 'Có' : 'Yes' },
-          { id: 'assistance_no', label: bookingSession.lang === 'vi' ? 'Không' : 'No' }
-        ]);
-        return;
-      }
-      if (qMatch.id === 'shirt_query' || qMatch.id === 'dryclean_query') {
-        renderChips([
-          { id: 'sameday', label: bookingSession.lang === 'vi' ? '⚡ Giặt sấy lấy liền' : '⚡ Same-day Wash' },
-          { id: 'express', label: bookingSession.lang === 'vi' ? '🚀 Hỏa tốc 4H' : '🚀 4-hour Express' },
-          { id: 'standard', label: bookingSession.lang === 'vi' ? '🧺 Tiêu chuẩn 24H' : '🧺 Standard 24h' },
-          { id: 'other', label: bookingSession.lang === 'vi' ? '👟 Dịch vụ khác' : '👟 Other Services' },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-        return;
-      }
-      if (qMatch.id === 'shoes_query' || qMatch.id === 'leather_shoes_query') {
-        renderChips([
-          { id: 'proceed_booking', label: localScript.proceedBookingChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-        return;
-      }
-      if (qMatch.id === 'pricing_query' || qMatch.id === 'checkin_query') {
-        showInitialMainMenu();
-      } else if (qMatch.id === 'hesitate_query') {
-        renderChips([
-          { id: 'pricing_query', label: localScript.pricingInfoChip },
-          { id: 'pickup', label: localScript.pickupInfoChip },
-          { id: 'proceed_booking', label: localScript.continueBookingChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-      } else {
-        renderChips([
-          { id: 'proceed_booking', label: localScript.proceedBookingChip },
-          { id: 'qna', label: localScript.askAnotherQuestionChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-      }
-      return;
-    }
-
-    // Keyword matching for normal text
-    const keywordMatch = localScript.questions.find(q => 
-      q.keywords.some(k => {
-        const cleanK = stripAccents(k.toLowerCase());
-        return matchKeyword(normalized, k) || 
-               matchKeyword(expandedText, k) || 
-               matchKeyword(cleanInput, cleanK) || 
-               matchKeyword(cleanExpanded, cleanK);
-      })
-    );
-    if (keywordMatch) {
-      appendBotMessage(keywordMatch.response);
-      if (keywordMatch.id === 'thankyou') {
-        bookingSession.waitingForAssistanceReply = true;
-        renderChips([
-          { id: 'assistance_yes', label: bookingSession.lang === 'vi' ? 'Có' : 'Yes' },
-          { id: 'assistance_no', label: bookingSession.lang === 'vi' ? 'Không' : 'No' }
-        ]);
-        return;
-      }
-      if (keywordMatch.id === 'shirt_query' || keywordMatch.id === 'dryclean_query') {
-        renderChips([
-          { id: 'sameday', label: bookingSession.lang === 'vi' ? '⚡ Giặt sấy lấy liền' : '⚡ Same-day Wash' },
-          { id: 'express', label: bookingSession.lang === 'vi' ? '🚀 Hỏa tốc 4H' : '🚀 4-hour Express' },
-          { id: 'standard', label: bookingSession.lang === 'vi' ? '🧺 Tiêu chuẩn 24H' : '🧺 Standard 24h' },
-          { id: 'other', label: bookingSession.lang === 'vi' ? '👟 Dịch vụ khác' : '👟 Other Services' },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-        return;
-      }
-      if (keywordMatch.id === 'shoes_query' || keywordMatch.id === 'leather_shoes_query') {
-        renderChips([
-          { id: 'proceed_booking', label: localScript.proceedBookingChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-        return;
-      }
-      if (keywordMatch.id === 'pricing_query') {
-        showInitialMainMenu();
-      } else if (keywordMatch.id === 'checkin_query') {
-        bookingSession.active = false;
-        bookingSession.step = 0;
-        bookingSession.userResponseText = '';
-        showInitialMainMenu();
-      } else if (keywordMatch.id === 'hesitate_query') {
-        bookingSession.active = false;
-        bookingSession.step = 0;
-        bookingSession.userResponseText = '';
-        renderChips([
-          { id: 'pricing_query', label: localScript.pricingInfoChip },
-          { id: 'pickup', label: localScript.pickupInfoChip },
-          { id: 'proceed_booking', label: localScript.continueBookingChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-      } else {
-        renderChips([
-          { id: 'proceed_booking', label: localScript.proceedBookingChip },
-          { id: 'back_main', label: localScript.mainMenuChip }
-        ]);
-      }
-    } else {
-      // Show thinking indicator
-      const loadingMsgId = appendBotMessage(bookingSession.lang === 'vi' ? 'Bé Hai đang trả lời... ⏳' : 'Bé Hai is typing... ⏳');
-      
-      let chatSessionId = localStorage.getItem('chatbot_session_id');
-      if (!chatSessionId) {
-        chatSessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('chatbot_session_id', chatSessionId);
-      }
-
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId: chatSessionId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const loadingEl = document.getElementById(loadingMsgId);
-        if (loadingEl) loadingEl.remove();
-
-        if (data.reply) {
-          appendBotMessage(data.reply);
-        } else {
-          appendBotMessage(localScript.fallbackMsg);
-          showInitialMainMenu();
-        }
-      })
-      .catch(err => {
-        console.error('Chatbot API failed:', err);
-        const loadingEl = document.getElementById(loadingMsgId);
-        if (loadingEl) loadingEl.remove();
-
         appendBotMessage(localScript.fallbackMsg);
-        showInitialMainMenu();
-      });
-    }
+      }
+    })
+    .catch(err => {
+      console.error('Chatbot API failed:', err);
+      const loadingEl = document.getElementById(loadingMsgId);
+      if (loadingEl) loadingEl.remove();
+
+      appendBotMessage(localScript.fallbackMsg);
+    });
   };
 
   // Initialize booking flow state
@@ -2605,8 +2289,46 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // First time greeting
     if (chatbotBody && chatbotBody.children.length === 0) {
-      appendBotMessage(salesScript[bookingSession.lang].greeting);
-      showInitialMainMenu();
+      const isVi = bookingSession.lang === 'vi';
+      const loadingMsgId = appendBotMessage(isVi ? 'Bé Hai đang kết nối... ⏳' : 'Bé Hai is connecting... ⏳');
+      
+      let chatSessionId = localStorage.getItem('chatbot_session_id');
+      if (!chatSessionId) {
+        chatSessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('chatbot_session_id', chatSessionId);
+      }
+
+      const initialPrompt = isVi ? 
+        "Hãy gửi một lời chào thân thiện bằng Tiếng Việt giới thiệu bạn là Bé Hai trợ lý giặt ủi Nice Fold Saigon, hỏi tên khách và cách bạn có thể giúp đỡ họ hôm nay." :
+        "Send a friendly welcome greeting in English introducing yourself as Bé Hai, the Nice Fold Saigon laundry assistant, and ask for their name and how you can help them today.";
+
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: initialPrompt, sessionId: chatSessionId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const loadingEl = document.getElementById(loadingMsgId);
+        if (loadingEl) loadingEl.remove();
+
+        if (data.reply) {
+          appendBotMessage(data.reply);
+        } else {
+          appendBotMessage(isVi ? 
+            "Xin chào! Tôi là Bé Hai, trợ lý giặt ủi Nice Fold Saigon. Tôi có thể giúp gì cho bạn hôm nay? 🧺" : 
+            "Hello! I am Bé Hai, your Nice Fold Saigon laundry assistant. How can I help you today? 🧺");
+        }
+      })
+      .catch(err => {
+        console.error('Chatbot greeting failed:', err);
+        const loadingEl = document.getElementById(loadingMsgId);
+        if (loadingEl) loadingEl.remove();
+
+        appendBotMessage(isVi ? 
+          "Xin chào! Tôi là Bé Hai, trợ lý giặt ủi Nice Fold Saigon. Tôi có thể giúp gì cho bạn hôm nay? 🧺" : 
+          "Hello! I am Bé Hai, your Nice Fold Saigon laundry assistant. How can I help you today? 🧺");
+      });
     }
   };
 
