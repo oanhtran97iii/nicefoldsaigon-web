@@ -14,7 +14,7 @@ import { z } from 'zod';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load env variables (check both mcp folder and parent folder)
+// Load env variables
 dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
@@ -123,7 +123,7 @@ async function sendEmailViaResend(toEmail, subject, htmlContent) {
     }
 }
 
-// Email templates are exact copies from server.js
+// Email templates
 const EMAIL_1_SUBJECT = "Welcome to Nice Fold Saigon! 🧼";
 const EMAIL_1_HTML = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -324,253 +324,356 @@ function triggerEmailSequence(name, email, serviceName = "Laundry Service", amou
     }, 72 * 3600 * 1000);
 }
 
-// --- Initialize MCP Server ---
-const server = new McpServer({
-  name: "nice-fold-saigon-mcp",
-  version: "1.0.0",
-});
+// --- Dynamic MCP Server Instantiation Helper ---
+function createMcpServer() {
+    const server = new McpServer({
+        name: "nice-fold-saigon-mcp",
+        version: "1.0.0",
+    });
 
-// Helper for logger
-function logCall(toolName, args) {
-    console.log(`[${new Date().toISOString()}] Tool called: ${toolName} with args: ${JSON.stringify(args)}`);
-}
+    // Helper for logger
+    const logCall = (toolName, args) => {
+        console.log(`[${new Date().toISOString()}] Tool called: ${toolName} with args: ${JSON.stringify(args)}`);
+    };
 
-// 1. Tool: update_order_status
-server.tool(
-  "update_order_status",
-  {
-    booking_code: z.string().describe("Mã đặt lịch cần cập nhật, ví dụ: NF1234"),
-    status: z.string().describe("Trạng thái mới: Đang giặt, Đang sấy, Đã xếp, Đang giao, Hoàn thành, Chờ XN"),
-    weight_kg: z.number().optional().describe("Cân nặng thực tế (đơn vị kg) để tính lại tiền"),
-    photo_url: z.string().optional().describe("Link ảnh chụp báo cáo / bằng chứng giao nhận")
-  },
-  async ({ booking_code, status, weight_kg, photo_url }) => {
-    logCall("update_order_status", { booking_code, status, weight_kg, photo_url });
-    const bCode = booking_code.trim().toUpperCase();
-    
-    try {
-        // Find existing order
-        const order = await dbGet(`
-            SELECT o.*, p.price as base_price, p.name as product_name, c.name as cust_name, c.email as cust_email
-            FROM orders o
-            LEFT JOIN products p ON o.product_id = p.id
-            LEFT JOIN customers c ON o.customer_id = c.id
-            WHERE o.booking_code = ? OR o.id = ?
-        `, [bCode, bCode]);
+    // 1. Tool: update_order_status
+    server.tool(
+      "update_order_status",
+      {
+        booking_code: z.string().describe("Mã đặt lịch cần cập nhật, ví dụ: NF1234"),
+        status: z.string().describe("Trạng thái mới: Đang giặt, Đang sấy, Đã xếp, Đang giao, Hoàn thành, Chờ XN"),
+        weight_kg: z.number().optional().describe("Cân nặng thực tế (đơn vị kg) để tính lại tiền"),
+        photo_url: z.string().optional().describe("Link ảnh chụp báo cáo / bằng chứng giao nhận")
+      },
+      async ({ booking_code, status, weight_kg, photo_url }) => {
+        logCall("update_order_status", { booking_code, status, weight_kg, photo_url });
+        const bCode = booking_code.trim().toUpperCase();
+        
+        try {
+            // Find existing order
+            const order = await dbGet(`
+                SELECT o.*, p.price as base_price, p.name as product_name, c.name as cust_name, c.email as cust_email
+                FROM orders o
+                LEFT JOIN products p ON o.product_id = p.id
+                LEFT JOIN customers c ON o.customer_id = c.id
+                WHERE o.booking_code = ? OR o.id = ?
+            `, [bCode, bCode]);
 
-        if (!order) {
-            return {
-                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy đơn hàng với mã ${bCode}` }) }]
-            };
-        }
-
-        // Calculate amount if weight is updated
-        let finalAmount = order.amount;
-        if (weight_kg !== undefined) {
-            if (weight_kg <= 0) {
+            if (!order) {
                 return {
-                    content: [{ type: "text", text: JSON.stringify({ success: false, message: "Cân nặng phải lớn hơn 0" }) }]
+                    content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy đơn hàng với mã ${bCode}` }) }]
                 };
             }
-            finalAmount = weight_kg * order.base_price;
-        }
 
-        // Update database query
-        let query = "UPDATE orders SET status = ?, amount = ?";
-        let params = [status, finalAmount];
-
-        // Map status to specific timestamp columns
-        const statusMap = {
-            "Đang giặt": "wash_start_time",
-            "Đang sấy": "dry_start_time",
-            "Đã xếp": "fold_complete_time",
-            "Đang giao": "out_for_delivery_time",
-            "Hoàn thành": "delivered_time"
-        };
-
-        if (statusMap[status]) {
-            query += `, ${statusMap[status]} = ?`;
-            params.push(new Date().toISOString());
-        }
-
-        if (photo_url) {
-            if (status === "Đã xếp") {
-                query += ", fold_report_photo_url = ?";
-                params.push(photo_url);
-            } else if (status === "Hoàn thành" || status === "Đang giao") {
-                query += ", delivery_proof_photo_url = ?";
-                params.push(photo_url);
+            // Calculate amount if weight is updated
+            let finalAmount = order.amount;
+            if (weight_kg !== undefined) {
+                if (weight_kg <= 0) {
+                    return {
+                        content: [{ type: "text", text: JSON.stringify({ success: false, message: "Cân nặng phải lớn hơn 0" }) }]
+                    };
+                }
+                finalAmount = weight_kg * order.base_price;
             }
-        }
 
-        query += " WHERE booking_code = ? OR id = ?";
-        params.push(bCode, bCode);
+            // Update database query
+            let query = "UPDATE orders SET status = ?, amount = ?";
+            let params = [status, finalAmount];
 
-        await dbRun(query, params);
+            // Map status to specific timestamp columns
+            const statusMap = {
+                "Đang giặt": "wash_start_time",
+                "Đang sấy": "dry_start_time",
+                "Đã xếp": "fold_complete_time",
+                "Đang giao": "out_for_delivery_time",
+                "Hoàn thành": "delivered_time"
+            };
 
-        // Send payment confirmation email if status transitions to completed
-        if (order.status !== 'Hoàn thành' && status === 'Hoàn thành') {
-            if (order.cust_email) {
-                setTimeout(() => sendPaymentConfirmation(order.cust_name, order.cust_email, order.product_name, finalAmount, bCode), 0);
+            if (statusMap[status]) {
+                query += `, ${statusMap[status]} = ?`;
+                params.push(new Date().toISOString());
             }
-        }
 
-        return {
-            content: [{ type: "text", text: JSON.stringify({
-                success: true,
-                message: `Đã cập nhật đơn hàng ${bCode} thành trạng thái: ${status}`,
-                booking_code: bCode,
-                new_status: status,
-                new_amount: finalAmount
-            }) }]
-        };
-    } catch (err) {
-        return {
-            content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
-        };
-    }
-  }
-);
+            if (photo_url) {
+                if (status === "Đã xếp") {
+                    query += ", fold_report_photo_url = ?";
+                    params.push(photo_url);
+                } else if (status === "Hoàn thành" || status === "Đang giao") {
+                    query += ", delivery_proof_photo_url = ?";
+                    params.push(photo_url);
+                }
+            }
 
-// 2. Tool: manage_waitlist
-server.tool(
-  "manage_waitlist",
-  {
-    action: z.enum(["list", "confirm"]).describe("Hành động cần làm: 'list' (xem danh sách chờ) hoặc 'confirm' (xác nhận khách hàng)"),
-    phone: z.string().optional().describe("Số điện thoại khách cần xác nhận (Bắt buộc nếu action là 'confirm')")
-  },
-  async ({ action, phone }) => {
-    logCall("manage_waitlist", { action, phone });
+            query += " WHERE booking_code = ? OR id = ?";
+            params.push(bCode, bCode);
 
-    try {
-        if (action === "list") {
-            // Find customers in database
-            const customers = await dbQuery("SELECT id, name, phone, email, registration_date FROM customers ORDER BY id DESC LIMIT 50");
+            await dbRun(query, params);
+
+            // Send payment confirmation email if status transitions to completed
+            if (order.status !== 'Hoàn thành' && status === 'Hoàn thành') {
+                if (order.cust_email) {
+                    setTimeout(() => sendPaymentConfirmation(order.cust_name, order.cust_email, order.product_name, finalAmount, bCode), 0);
+                }
+            }
+
             return {
                 content: [{ type: "text", text: JSON.stringify({
                     success: true,
-                    count: customers.length,
-                    customers: customers
+                    message: `Đã cập nhật đơn hàng ${bCode} thành trạng thái: ${status}`,
+                    booking_code: bCode,
+                    new_status: status,
+                    new_amount: finalAmount
                 }) }]
             };
-        } else if (action === "confirm") {
-            if (!phone) {
-                return {
-                    content: [{ type: "text", text: JSON.stringify({ success: false, message: "Thiếu số điện thoại để xác nhận" }) }]
-                };
-            }
-            const cleanPhone = phone.trim();
-            // Verify if customer exists
-            const cust = await dbGet("SELECT * FROM customers WHERE phone = ? OR phone LIKE ?", [cleanPhone, `%${cleanPhone}`]);
-            if (!cust) {
-                return {
-                    content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy khách hàng với SĐT ${cleanPhone} trong database` }) }]
-                };
-            }
-
-            // Trigger email sequence chào mừng
-            if (cust.email) {
-                setTimeout(() => triggerEmailSequence(cust.name, cust.email, "Premium Hotel Laundry Service", 0, cust.hotel || '-', cust.room || '-'), 0);
-                return {
-                    content: [{ type: "text", text: JSON.stringify({
-                        success: true,
-                        message: `Xác nhận khách hàng ${cust.name} thành công. Chuỗi email chăm sóc tự động đã được kích hoạt.`,
-                        customer: cust
-                    }) }]
-                };
-            } else {
-                return {
-                    content: [{ type: "text", text: JSON.stringify({
-                        success: true,
-                        message: `Xác nhận khách hàng ${cust.name} thành công. Không gửi email do thiếu địa chỉ email.`,
-                        customer: cust
-                    }) }]
-                };
-            }
-        }
-    } catch (err) {
-        return {
-            content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
-        };
-    }
-  }
-);
-
-// 3. Tool: reconcile_payment_manually
-server.tool(
-  "reconcile_payment_manually",
-  {
-    booking_code: z.string().describe("Mã đặt lịch cần xác nhận thanh toán thủ công, ví dụ: NF1234"),
-    actual_amount: z.number().optional().describe("Số tiền thực tế nhận được (đơn vị VND)")
-  },
-  async ({ booking_code, actual_amount }) => {
-    logCall("reconcile_payment_manually", { booking_code, actual_amount });
-    const bCode = booking_code.trim().toUpperCase();
-
-    try {
-        const order = await dbGet(`
-            SELECT o.*, p.name as product_name, c.name as cust_name, c.email as cust_email
-            FROM orders o
-            LEFT JOIN products p ON o.product_id = p.id
-            LEFT JOIN customers c ON o.customer_id = c.id
-            WHERE o.booking_code = ? OR o.id = ?
-        `, [bCode, bCode]);
-
-        if (!order) {
+        } catch (err) {
             return {
-                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy đơn hàng với mã ${bCode}` }) }]
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
             };
         }
+      }
+    );
 
-        const finalAmount = actual_amount !== undefined ? actual_amount : order.amount;
+    // 2. Tool: manage_waitlist
+    server.tool(
+      "manage_waitlist",
+      {
+        action: z.enum(["list", "confirm"]).describe("Hành động cần làm: 'list' (xem danh sách chờ) hoặc 'confirm' (xác nhận khách hàng)"),
+        phone: z.string().optional().describe("Số điện thoại khách cần xác nhận (Bắt buộc nếu action là 'confirm')")
+      },
+      async ({ action, phone }) => {
+        logCall("manage_waitlist", { action, phone });
 
-        // Update database: status to 'Hoàn thành' and set delivered timestamp
-        await dbRun(`
-            UPDATE orders 
-            SET status = 'Hoàn thành', amount = ?, delivered_time = ?
-            WHERE booking_code = ? OR id = ?
-        `, [finalAmount, new Date().toISOString(), bCode, bCode]);
+        try {
+            if (action === "list") {
+                const customers = await dbQuery("SELECT id, name, phone, email, registration_date FROM customers ORDER BY id DESC LIMIT 50");
+                return {
+                    content: [{ type: "text", text: JSON.stringify({
+                        success: true,
+                        count: customers.length,
+                        customers: customers
+                    }) }]
+                };
+            } else if (action === "confirm") {
+                if (!phone) {
+                    return {
+                        content: [{ type: "text", text: JSON.stringify({ success: false, message: "Thiếu số điện thoại để xác nhận" }) }]
+                    };
+                }
+                const cleanPhone = phone.trim();
+                const cust = await dbGet("SELECT * FROM customers WHERE phone = ? OR phone LIKE ?", [cleanPhone, `%${cleanPhone}`]);
+                if (!cust) {
+                    return {
+                        content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy khách hàng với SĐT ${cleanPhone} trong database` }) }]
+                    };
+                }
 
-        // Send payment confirmation email
-        if (order.cust_email) {
-            setTimeout(() => sendPaymentConfirmation(order.cust_name, order.cust_email, order.product_name, finalAmount, bCode), 0);
+                if (cust.email) {
+                    setTimeout(() => triggerEmailSequence(cust.name, cust.email, "Premium Hotel Laundry Service", 0, cust.hotel || '-', cust.room || '-'), 0);
+                    return {
+                        content: [{ type: "text", text: JSON.stringify({
+                            success: true,
+                            message: `Xác nhận khách hàng ${cust.name} thành công. Chuỗi email chăm sóc tự động đã được kích hoạt.`,
+                            customer: cust
+                        }) }]
+                    };
+                } else {
+                    return {
+                        content: [{ type: "text", text: JSON.stringify({
+                            success: true,
+                            message: `Xác nhận khách hàng ${cust.name} thành công. Không gửi email do thiếu địa chỉ email.`,
+                            customer: cust
+                        }) }]
+                    };
+                }
+            }
+        } catch (err) {
+            return {
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
+            };
         }
+      }
+    );
 
-        return {
-            content: [{ type: "text", text: JSON.stringify({
-                success: true,
-                message: `Xác nhận thanh toán thủ công thành công cho đơn ${bCode}`,
-                booking_code: bCode,
-                status: "Hoàn thành",
-                amount_confirmed: finalAmount,
-                email_sent: !!order.cust_email
-            }) }]
-        };
-    } catch (err) {
-        return {
-            content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
-        };
-    }
-  }
-);
+    // 3. Tool: reconcile_payment_manually
+    server.tool(
+      "reconcile_payment_manually",
+      {
+        booking_code: z.string().describe("Mã đặt lịch cần xác nhận thanh toán thủ công, ví dụ: NF1234"),
+        actual_amount: z.number().optional().describe("Số tiền thực tế nhận được (đơn vị VND)")
+      },
+      async ({ booking_code, actual_amount }) => {
+        logCall("reconcile_payment_manually", { booking_code, actual_amount });
+        const bCode = booking_code.trim().toUpperCase();
 
-// --- Initialize Express Wrapper for Streamable HTTP ---
+        try {
+            const order = await dbGet(`
+                SELECT o.*, p.name as product_name, c.name as cust_name, c.email as cust_email
+                FROM orders o
+                LEFT JOIN products p ON o.product_id = p.id
+                LEFT JOIN customers c ON o.customer_id = c.id
+                WHERE o.booking_code = ? OR o.id = ?
+            `, [bCode, bCode]);
+
+            if (!order) {
+                return {
+                    content: [{ type: "text", text: JSON.stringify({ success: false, message: `Không tìm thấy đơn hàng với mã ${bCode}` }) }]
+                };
+            }
+
+            const finalAmount = actual_amount !== undefined ? actual_amount : order.amount;
+
+            await dbRun(`
+                UPDATE orders 
+                SET status = 'Hoàn thành', amount = ?, delivered_time = ?
+                WHERE booking_code = ? OR id = ?
+            `, [finalAmount, new Date().toISOString(), bCode, bCode]);
+
+            if (order.cust_email) {
+                setTimeout(() => sendPaymentConfirmation(order.cust_name, order.cust_email, order.product_name, finalAmount, bCode), 0);
+            }
+
+            return {
+                content: [{ type: "text", text: JSON.stringify({
+                    success: true,
+                    message: `Xác nhận thanh toán thủ công thành công cho đơn ${bCode}`,
+                    booking_code: bCode,
+                    status: "Hoàn thành",
+                    amount_confirmed: finalAmount,
+                    email_sent: !!order.cust_email
+                }) }]
+            };
+        } catch (err) {
+            return {
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
+            };
+        }
+      }
+    );
+
+    return server;
+}
+
+// Map to store transports dynamically by session ID
+const transports = {};
+
+// Helper to check if a request is initialize
+function isInitializeRequest(body) {
+    return body && body.method === 'initialize';
+}
+
+// --- Initialize Express ---
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Set up Streamable HTTP Transport
-const transport = new StreamableHTTPServerTransport({
-  sessionIdGenerator: () => randomUUID()
-});
-
-await server.connect(transport);
-
-// Endpoint for goClaw to call over local HTTP Streamable HTTP protocol
+// 1. POST Endpoint - handles JSON-RPC calls and initializations
 app.post('/mcp', async (req, res) => {
-  await transport.handleRequest(req, res, req.body);
+    const sessionId = req.headers['mcp-session-id'];
+    
+    try {
+        let transport;
+        if (sessionId && transports[sessionId]) {
+            transport = transports[sessionId];
+        } else if (!sessionId && isInitializeRequest(req.body)) {
+            // Create a fresh transport for this new session
+            transport = new StreamableHTTPServerTransport({
+                sessionIdGenerator: () => randomUUID(),
+                onsessioninitialized: (sid) => {
+                    console.log(`[${new Date().toISOString()}] Session initialized with ID: ${sid}`);
+                    transports[sid] = transport;
+                }
+            });
+
+            transport.onclose = () => {
+                const sid = transport.sessionId;
+                if (sid && transports[sid]) {
+                    console.log(`[${new Date().toISOString()}] Session ${sid} closed, removing transport`);
+                    delete transports[sid];
+                }
+            };
+
+            // Instantiate a new stateful McpServer for this session
+            const server = createMcpServer();
+            await server.connect(transport);
+            
+            await transport.handleRequest(req, res, req.body);
+            return;
+        } else {
+            res.status(400).json({
+                jsonrpc: '2.0',
+                error: {
+                    code: -32000,
+                    message: 'Bad Request: No valid session ID provided'
+                },
+                id: null
+            });
+            return;
+        }
+
+        await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+        console.error('Error handling MCP POST:', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                jsonrpc: '2.0',
+                error: {
+                    code: -32603,
+                    message: 'Internal server error'
+                },
+                id: null
+            });
+        }
+    }
 });
 
+// 2. GET Endpoint - handles SSE streams for established sessions
+app.get('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'];
+    if (!sessionId || !transports[sessionId]) {
+        res.status(400).send('Invalid or missing session ID');
+        return;
+    }
+
+    console.log(`[${new Date().toISOString()}] Establishing SSE stream for session: ${sessionId}`);
+    const transport = transports[sessionId];
+    await transport.handleRequest(req, res);
+});
+
+// 3. DELETE Endpoint - handles session termination
+app.delete('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'];
+    if (!sessionId || !transports[sessionId]) {
+        res.status(400).send('Invalid or missing session ID');
+        return;
+    }
+
+    console.log(`[${new Date().toISOString()}] Terminating session: ${sessionId}`);
+    try {
+        const transport = transports[sessionId];
+        await transport.handleRequest(req, res);
+    } catch (error) {
+        console.error('Error handling session termination:', error);
+        if (!res.headersSent) {
+            res.status(500).send('Error processing session termination');
+        }
+    }
+});
+
+// Start the server
 app.listen(PORT, HOST, () => {
-    console.log(`[${new Date().toISOString()}] Streamable HTTP MCP Server running on http://${HOST}:${PORT}/mcp`);
+    console.log(`[${new Date().toISOString()}] Streamable HTTP MCP Server listening on http://${HOST}:${PORT}/mcp`);
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('Shutting down MCP server...');
+    for (const sessionId in transports) {
+        try {
+            await transports[sessionId].close();
+            delete transports[sessionId];
+        } catch (error) {
+            console.error(`Error closing session ${sessionId}:`, error);
+        }
+    }
+    process.exit(0);
 });
