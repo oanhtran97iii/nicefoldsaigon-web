@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Nice Fold Saigon</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Premium Theme Variables matching Nice Fold */
+    :root {
+      --color-navy: #0d1b3e;
+      --color-blue: #3182ce;
+      --color-pink: #ff6b81;
+      --color-bg-dark: #0a0f1d;
+      --color-bg-card: rgba(255, 255, 255, 0.9);
+      --color-text-dark: #1a202c;
+      --color-text-light: #718096;
+      --color-border: #e2e8f0;
+      --color-success: #38a169;
+      --color-danger: #e53e3e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--color-bg-dark);
+      background-image: radial-gradient(circle at 10% 20%, rgba(13, 27, 62, 0.8) 0%, rgba(10, 15, 29, 1) 90%);
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header styling */
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 20px;
+    }
+
+    .brand-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--color-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.9rem;
+      color: var(--color-text-light);
+    }
+
+    /* Tabs Styling */
+    .tab-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+      background: var(--color-blue);
+      border-color: var(--color-blue);
+      box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
+    }
+
+    /* Content Card */
+    .dashboard-card {
+      background: var(--color-bg-card);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      padding: 30px;
+      color: var(--color-text-dark);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    /* Buttons styling */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--color-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2b6cb0;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--color-danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c53030;
+    }
+
+    .btn-secondary {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* Table styling */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th {
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 700;
+      padding: 16px;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border);
+      color: #2d3748;
+    }
+
+    tr:hover td {
+      background: #fcfcfd;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    /* Badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+
+    .badge-physical { background: #feebc8; color: #c05621; }
+    .badge-digital { background: #e2e8f0; color: #4a5568; }
+    .badge-service { background: #e0f2fe; color: #0369a1; }
+    
+    .badge-pending { background: #fed7d7; color: #9b2c2c; }
+    .badge-paid { background: #c6f6d5; color: #22543d; }
+    .badge-completed { background: #e2e8f0; color: #2d3748; }
+
+    /* Modal styling */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+      color: var(--color-text-dark);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.show .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #a0aec0;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--color-border);
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      border-color: var(--color-blue);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Admin Header -->
+    <header class="admin-header">
+      <div>
+        <h1 class="brand-title">Nice Fold Saigon</h1>
+        <p class="brand-subtitle">Management Control Center (No Auth Required)</p>
+      </div>
+      <a href="../" class="btn btn-secondary" style="text-decoration: none;">View Site</a>
+    </header>
+
+    <!-- Tab Buttons -->
+    <div class="tab-container">
+      <button class="tab-btn" onclick="switchTab('products')">Sản phẩm</button>
+      <button class="tab-btn" onclick="switchTab('customers')">Khách hàng</button>
+      <button class="tab-btn active" onclick="switchTab('orders')">Đơn hàng</button>
+    </div>
+
+    <!-- Main Content Tab Cards -->
+    
+    <!-- 1. Products Tab Card -->
+    <div id="products-tab" class="dashboard-card tab-content" style="display: none;">
+      <div class="card-header">
+        <h2 class="card-title">Danh sách Sản phẩm</h2>
+        <button class="btn btn-primary" onclick="openAddModal('product')">➕ Thêm Sản phẩm</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên sản phẩm</th>
+              <th>Loại sản phẩm</th>
+              <th>Giá cả</th>
+              <th>Mô tả</th>
+              <th>Số lượng tồn</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="products-table-body">
+            <!-- Dynamic data -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. Customers Tab Card -->
+    <div id="customers-tab" class="dashboard-card tab-content" style="display: none;">
+      <div class="card-header">
+        <h2 class="card-title">Danh sách Khách hàng</h2>
+        <button class="btn btn-primary" onclick="openAddModal('customer')">➕ Thêm Khách hàng</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên khách hàng</th>
+              <th>Số điện thoại</th>
+              <th>Email</th>
+              <th>Khách sạn & Địa chỉ</th>
+              <th>Số phòng</th>
+              <th>Ngày đăng ký</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="customers-table-body">
+            <!-- Dynamic data -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. Orders Tab Card -->
+    <div id="orders-tab" class="dashboard-card tab-content">
+      <div class="card-header">
+        <h2 class="card-title">Danh sách Đơn hàng</h2>
+        <button class="btn btn-primary" onclick="openAddModal('order')">➕ Tạo Đơn hàng</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              <th>Khách hàng & SĐT</th>
+              <th>Khách sạn & Phòng</th>
+              <th>Gói giặt</th>
+              <th>Tổng tiền bill (VND)</th>
+              <th>Trạng thái đơn</th>
+              <th>Thao tác nhanh</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <!-- Dynamic data -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- --- MODALS SECTION --- -->
+
+  <!-- Product Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 id="productModalTitle" class="modal-title">Thêm Sản phẩm</h4>
+        <button class="modal-close" onclick="closeModal('productModal')">&times;</button>
+      </div>
+      <form id="productForm" onsubmit="saveProduct(event)">
+        <input type="hidden" id="prod-id">
+        <div class="form-group">
+          <label for="prod-name">Tên sản phẩm *</label>
+          <input type="text" id="prod-name" class="form-control" required placeholder="Ví dụ: Giặt Standard">
+        </div>
+        <div class="form-group">
+          <label for="prod-type">Loại sản phẩm *</label>
+          <select id="prod-type" class="form-control" required onchange="toggleStockField()">
+            <option value="service">Dịch vụ (Service)</option>
+            <option value="physical">Vật lý (Physical)</option>
+            <option value="digital">Kỹ thuật số (Digital)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="prod-price">Giá cả (VND) *</label>
+          <input type="number" id="prod-price" class="form-control" required placeholder="Ví dụ: 120000">
+        </div>
+        <div class="form-group">
+          <label for="prod-desc">Mô tả</label>
+          <textarea id="prod-desc" class="form-control" rows="3" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
+        </div>
+        <div class="form-group" id="stock-group" style="display: none;">
+          <label for="prod-stock">Số lượng tồn kho *</label>
+          <input type="number" id="prod-stock" class="form-control" placeholder="Bắt buộc đối với sản phẩm vật lý">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('productModal')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu lại</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Customer Modal -->
+  <div id="customerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 id="customerModalTitle" class="modal-title">Thêm Khách hàng</h4>
+        <button class="modal-close" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <form id="customerForm" onsubmit="saveCustomer(event)">
+        <input type="hidden" id="cust-id">
+        <div class="form-group">
+          <label for="cust-name">Tên khách hàng *</label>
+          <input type="text" id="cust-name" class="form-control" required placeholder="Ví dụ: Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label for="cust-phone">Số điện thoại</label>
+          <input type="text" id="cust-phone" class="form-control" placeholder="Nhập SĐT để đối soát">
+        </div>
+        <div class="form-group">
+          <label for="cust-zalo">Zalo</label>
+          <input type="text" id="cust-zalo" class="form-control" placeholder="Link Zalo hoặc số điện thoại Zalo">
+        </div>
+        <div class="form-group">
+          <label for="cust-email">Email</label>
+          <input type="email" id="cust-email" class="form-control" placeholder="Nhập địa chỉ Email">
+        </div>
+        <div class="form-group">
+          <label for="cust-hotel">Khách sạn & Địa chỉ</label>
+          <input type="text" id="cust-hotel" class="form-control" placeholder="Ví dụ: Grand Hotel, 123 Đồng Khởi">
+        </div>
+        <div class="form-group">
+          <label for="cust-room">Số phòng</label>
+          <input type="text" id="cust-room" class="form-control" placeholder="Ví dụ: 502">
+        </div>
+        <div class="form-group">
+          <label for="cust-date">Ngày đăng ký</label>
+          <input type="text" id="cust-date" class="form-control" placeholder="Mặc định lấy thời gian hiện tại">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu lại</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Modal -->
+  <div id="orderModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 id="orderModalTitle" class="modal-title">Tạo Đơn hàng</h4>
+        <button class="modal-close" onclick="closeModal('orderModal')">&times;</button>
+      </div>
+      <form id="orderForm" onsubmit="saveOrder(event)">
+        <input type="hidden" id="ord-id">
+        <div class="form-group">
+          <label for="ord-cust">Khách hàng *</label>
+          <select id="ord-cust" class="form-control" required onchange="onCustomerSelectChange()">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ord-phone">Số điện thoại</label>
+          <input type="text" id="ord-phone" class="form-control" placeholder="Số điện thoại của khách hàng">
+        </div>
+        <div class="form-group">
+          <label for="ord-email">Email</label>
+          <input type="email" id="ord-email" class="form-control" placeholder="Nhập Email để gửi xác nhận">
+        </div>
+        <div class="form-group">
+          <label for="ord-prod">Sản phẩm *</label>
+          <select id="ord-prod" class="form-control" required onchange="onProductSelectChange()">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ord-amount">Số tiền thanh toán (VND) *</label>
+          <input type="number" id="ord-amount" class="form-control" required placeholder="Tự động điền theo giá sản phẩm">
+        </div>
+        <div class="form-group">
+          <label for="ord-status">Trạng thái đơn hàng *</label>
+          <select id="ord-status" class="form-control" required>
+            <option value="Chờ XN">Chờ XN</option>
+            <option value="Hoàn thành">Hoàn thành</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ord-date">Ngày mua hàng</label>
+          <input type="text" id="ord-date" class="form-control" placeholder="Mặc định lấy thời gian hiện tại">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('orderModal')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Tạo đơn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- --- JAVASCRIPT LOGIC --- -->
+  <script>
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocal ? (window.location.origin + "/api") : "";
+
+    const staticProducts = [
+      { id: 1, name: "Standard wash & fold (24h)", type: "service", price: 170000, description: "170k/3kg base (extra 40k/kg). Hoàn thành trong 24h.", stock_quantity: null },
+      { id: 2, name: "Same-day Wash & Fold (8h-12h)", type: "service", price: 250000, description: "250k/4kg base (extra 50k/kg). Giao trả trước 9:00 PM.", stock_quantity: null },
+      { id: 3, name: "Express Wash & Fold (4h)", type: "service", price: 330000, description: "330k/4kg base (extra 70k/kg). Hoàn thành siêu tốc trong 4h.", stock_quantity: null },
+      { id: 4, name: "Shoes Cleaning Premium", type: "service", price: 160000, description: "Vệ sinh giày cao cấp.", stock_quantity: null }
+    ];
+    
+    // Memory Cache for selects
+    let productsList = [];
+    let customersList = [];
+    let activeTab = 'orders';
+    let reloadInterval = null;
+
+    // 1. Tab switching function
+    function switchTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        const btnText = btn.innerText.toLowerCase();
+        if (
+          (tabName === 'products' && (btnText.includes('sản phẩm') || btnText.includes('product'))) ||
+          (tabName === 'customers' && (btnText.includes('khách hàng') || btnText.includes('customer'))) ||
+          (tabName === 'orders' && (btnText.includes('đơn hàng') || btnText.includes('order')))
+        ) {
+          btn.classList.add('active');
+        }
+      });
+
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+      loadData(tabName);
+      
+      // Reset auto-reload timer
+      setupAutoReload();
+    }
+
+    function setupAutoReload() {
+      if (reloadInterval) clearInterval(reloadInterval);
+      reloadInterval = setInterval(async () => {
+        if (activeTab === 'orders') {
+          await loadData('customers');
+        }
+        await loadData(activeTab);
+      }, 15000); // Auto reload every 15 seconds
+    }
+
+    // 2. Fetch Data functions
+    async function loadData(tabName) {
+      let fetchUrl = `../api.php?action=${tabName}`;
+      
+      // Prevent browser / CDN caching of GET requests
+      fetchUrl += (fetchUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+
+      try {
+        const response = await fetch(fetchUrl);
+        if (!response.ok) throw new Error("Fetch failed");
+        let data = await response.json();
+
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        if (tabName === 'products') {
+          productsList = data;
+          renderProducts(data);
+        } else if (tabName === 'customers') {
+          // Normalize customer fields (supporting both headers and column letter mapping from n8n)
+          const normalizedCustomers = data
+            .filter(c => {
+              const idVal = (c.id || c['ID Khách hàng'] || c.A || '').toString().trim();
+              return idVal && idVal !== 'ID Khách hàng';
+            })
+            .map(c => ({
+              id: c.id || c['ID Khách hàng'] || c.A || '',
+              name: c.name || c['Tên khách hàng'] || c.B || '',
+              phone: c.phone || c['Số điện thoại / Zalo / WA'] || c.C || '',
+              email: c.email || c.Email || '',
+              hotel: c.hotel || c['Địa chỉ khách sạn'] || c.D || '',
+              room: c.room || c['Số phòng'] || c.E || '',
+              registration_date: c.registration_date || c['Ngày đăng ký'] || c.F || ''
+            }));
+          customersList = normalizedCustomers;
+          renderCustomers(normalizedCustomers);
+        } else if (tabName === 'orders') {
+          renderOrders(data);
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+        if (tabName === 'products') {
+          productsList = staticProducts;
+          renderProducts(staticProducts);
+        }
+      }
+    }
+
+    // 3. Render functions
+    function renderProducts(products) {
+      const tbody = document.getElementById('products-table-body');
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td>${p.id}</td>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="badge badge-${p.type}">${p.type}</span></td>
+          <td>${p.price.toLocaleString('vi-VN')} VND</td>
+          <td>${p.description || '<span style="color:#cbd5e0;">-</span>'}</td>
+          <td>${p.stock_quantity !== null ? p.stock_quantity : '<span style="color:#cbd5e0;">∞</span>'}</td>
+          <td>
+            <div class="action-group">
+              <button class="btn btn-secondary btn-icon" onclick="editProduct(${p.id})">Sửa</button>
+              <button class="btn btn-danger btn-icon" onclick="deleteItem('products', ${p.id})">Xóa</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCustomers(customers) {
+      const tbody = document.getElementById('customers-table-body');
+      tbody.innerHTML = customers.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.phone || '<span style="color:#cbd5e0;">-</span>'}</td>
+          <td>${c.email || '<span style="color:#cbd5e0;">-</span>'}</td>
+          <td>${c.hotel || '<span style="color:#cbd5e0;">-</span>'}</td>
+          <td>${c.room || '<span style="color:#cbd5e0;">-</span>'}</td>
+          <td>${c.registration_date}</td>
+          <td>
+            <div class="action-group">
+              <button class="btn btn-secondary btn-icon" onclick="editCustomer(${c.id})">Sửa</button>
+              <button class="btn btn-danger btn-icon" onclick="deleteItem('customers', ${c.id})">Xóa</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderOrders(orders) {
+      const tbody = document.getElementById('orders-table-body');
+      tbody.innerHTML = orders.map(o => {
+        const id = o.id || o['Mã đặt lịch'] || '';
+        const name = o['Tên khách hàng'] || o.customer_name || 'Khách vãng lai';
+        const phone = o['SĐT liên hệ (ID Khách)'] || o.phone || '';
+        let email = o.email || o['Email'] || '';
+        let hotel = o['Tên khách sạn & Địa chỉ'] || o.hotel || '';
+        let room = o['Số phòng'] || o.room || '';
+
+        // Client-side lookup fallback using phone number if fields are missing (e.g. for n8n/JSON orders)
+        if (phone && (!email || !hotel || !room)) {
+          const matchedCust = customersList.find(c => {
+            const cPhone = c.phone || c['Số điện thoại / Zalo / WA'] || '';
+            const cPhoneClean = (cPhone + '').replace(/\D/g, '');
+            const oPhoneClean = (phone + '').replace(/\D/g, '');
+            return cPhoneClean && cPhoneClean === oPhoneClean;
+          });
+          if (matchedCust) {
+            if (!email) email = matchedCust.email || matchedCust['Email'] || '';
+            if (!hotel) hotel = matchedCust.hotel || matchedCust['Tên khách sạn & Địa chỉ'] || matchedCust['Địa chỉ khách sạn'] || '';
+            if (!room) room = matchedCust.room || matchedCust['Số phòng'] || '';
+          }
+        }
+        const time = o['Thời gian nhận'] || '';
+        const service = o['Gói giặt'] || o.product_name || 'Sản phẩm đã xóa';
+        const rawAmount = o['Tổng tiền bill tạm tính'] !== undefined ? o['Tổng tiền bill tạm tính'] : o.amount;
+        const amount = parseFloat(rawAmount) || 0;
+        
+        let status = o['Trạng thái đơn'] || o.status || 'Chờ XN';
+        if (status === 'pending') status = 'Chờ XN';
+        if (status === 'paid' || status === 'Đã TT' || status === 'Đã thanh toán' || status === 'completed') {
+          status = 'Hoàn thành';
+        }
+
+        return `
+          <tr>
+            <td><strong>${id}</strong></td>
+            <td>
+              <div><strong>${name}</strong></div>
+              <div style="font-size: 0.8rem; color: #718096;">${phone}</div>
+              ${email ? `<div style="font-size: 0.8rem; color: #4a5568; margin-top: 2px; font-weight: 500;">📧 ${email}</div>` : ''}
+            </td>
+            <td>
+              <div>${hotel || '<span style="color:#cbd5e0;">-</span>'}</div>
+              <div style="font-size: 0.8rem; color: #718096;">P. ${room || '-'}</div>
+            </td>
+            <td><span style="font-size: 0.85rem; font-weight: 500;">${service}</span></td>
+            <td>
+              <input type="text" id="amt-${id}" class="form-control" style="width: 110px; padding: 6px; font-weight: 700; color: #2b6cb0; background: #ebf8ff;" value="${amount.toLocaleString('vi-VN')}" oninput="formatCurrencyInput(this)" ${status === 'Hoàn thành' ? 'readonly style="background: #edf2f7; color: #4a5568; cursor: not-allowed;"' : ''}>
+            </td>
+            <td>
+              <select id="status-${id}" class="form-control" style="width: 120px; padding: 6px; font-weight: 700;" ${status === 'Hoàn thành' ? 'disabled style="background: #edf2f7; color: #4a5568; cursor: not-allowed;"' : ''} onchange="saveOrderInline('${id}', '${phone}', '${name}')">
+                <option value="Chờ XN" ${status === 'Chờ XN' ? 'selected' : ''}>Chờ XN</option>
+                <option value="Hoàn thành" ${status === 'Hoàn thành' ? 'selected' : ''}>Hoàn thành</option>
+              </select>
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                ${status === 'Hoàn thành' ? '' : `<button class="btn btn-primary btn-icon" onclick="saveOrderInline('${id}', '${phone}', '${name}')" title="Lưu thay đổi sang Google Sheets">💾 Lưu</button>`}
+                <button class="btn btn-secondary btn-icon" style="background:#e0f2fe; color:#0369a1;" onclick="sendWhatsAppInline('${id}', '${phone}', '${name}')" title="Gửi WhatsApp Hóa đơn">💬 WA</button>
+                <button class="btn btn-secondary btn-icon" style="background:#edf2f7; color:#2d3748;" onclick="sendZaloInline('${phone}')" title="Mở Zalo Chat">💬 Zalo</button>
+                <button class="btn btn-secondary btn-icon" style="background:#edf2f7; color:#2d3748;" onclick="copyZaloTextInline('${id}', '${name}')" title="Copy tin nhắn hóa đơn">📋 Copy</button>
+                <button class="btn btn-secondary btn-icon" style="background:#fef3c7; color:#b45309;" onclick="viewQRInline('${id}')" title="Xem mã QR thanh toán VietQR">🖼️ QR</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 4. Modal Triggers
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('show');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+
+    function openAddModal(type) {
+      if (type === 'product') {
+        document.getElementById('productForm').reset();
+        document.getElementById('prod-id').value = '';
+        document.getElementById('productModalTitle').innerText = "Thêm Sản phẩm";
+        toggleStockField();
+        openModal('productModal');
+      } else if (type === 'customer') {
+        document.getElementById('customerForm').reset();
+        document.getElementById('cust-id').value = '';
+        document.getElementById('customerModalTitle').innerText = "Thêm Khách hàng";
+        document.getElementById('cust-date').value = new Date().toISOString().substring(0, 19).replace('T', ' ');
+        openModal('customerModal');
+      } else if (type === 'order') {
+        document.getElementById('orderForm').reset();
+        document.getElementById('ord-id').value = '';
+        document.getElementById('orderModalTitle').innerText = "Tạo Đơn hàng";
+        document.getElementById('ord-date').value = new Date().toISOString().substring(0, 19).replace('T', ' ');
+        
+        // Dynamically load selects
+        loadDropdownSelects().then(() => {
+          onProductSelectChange();
+          onCustomerSelectChange();
+          openModal('orderModal');
+        });
+      }
+    }
+
+    function toggleStockField() {
+      const type = document.getElementById('prod-type').value;
+      const stockGroup = document.getElementById('stock-group');
+      const stockInput = document.getElementById('prod-stock');
+      
+      if (type === 'physical') {
+        stockGroup.style.display = 'block';
+        stockInput.required = true;
+      } else {
+        stockGroup.style.display = 'none';
+        stockInput.required = false;
+        stockInput.value = '';
+      }
+    }
+
+    async function loadDropdownSelects() {
+      // Ensure products and customers lists are loaded
+      await loadData('products');
+      await loadData('customers');
+
+      const custSelect = document.getElementById('ord-cust');
+      const prodSelect = document.getElementById('ord-prod');
+
+      custSelect.innerHTML = customersList.map(c => `<option value="${c.id}">${c.name} (${c.phone || 'No Phone'})</option>`).join('');
+      prodSelect.innerHTML = productsList.map(p => {
+        let stockLabel = p.stock_quantity !== null ? ` | Tồn kho: ${p.stock_quantity}` : '';
+        return `<option value="${p.id}" data-price="${p.price}">${p.name} (${p.price.toLocaleString('vi-VN')} VND${stockLabel})</option>`;
+      }).join('');
+    }
+
+    function onProductSelectChange() {
+      const prodSelect = document.getElementById('ord-prod');
+      const amountInput = document.getElementById('ord-amount');
+      const selectedOption = prodSelect.options[prodSelect.selectedIndex];
+      if (selectedOption) {
+        amountInput.value = selectedOption.getAttribute('data-price');
+      }
+    }
+
+    function onCustomerSelectChange() {
+      const custSelect = document.getElementById('ord-cust');
+      const phoneInput = document.getElementById('ord-phone');
+      const emailInput = document.getElementById('ord-email');
+      if (!custSelect || !phoneInput || !emailInput) return;
+      const selectedId = custSelect.value;
+      const customer = customersList.find(c => String(c.id) === String(selectedId));
+      if (customer) {
+        phoneInput.value = customer.phone || '';
+        emailInput.value = customer.email || '';
+      } else {
+        phoneInput.value = '';
+        emailInput.value = '';
+      }
+    }
+
+    // 5. CRUD Submit/Save actions
+    async function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('prod-id').value;
+      const payload = {
+        name: document.getElementById('prod-name').value,
+        type: document.getElementById('prod-type').value,
+        price: parseFloat(document.getElementById('prod-price').value),
+        description: document.getElementById('prod-desc').value,
+        stock_quantity: document.getElementById('prod-stock').value !== '' ? parseInt(document.getElementById('prod-stock').value) : null
+      };
+
+      if (id) payload.id = parseInt(id);
+
+      try {
+        const response = await fetch(`../api.php?action=save-product`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+        if (resData.error) throw new Error(resData.error);
+        
+        closeModal('productModal');
+        loadData('products');
+      } catch (err) {
+        alert("Lỗi: " + err.message);
+      }
+    }
+
+    async function saveCustomer(e) {
+      e.preventDefault();
+      const id = document.getElementById('cust-id').value;
+      const payload = {
+        id: id,
+        name: document.getElementById('cust-name').value,
+        phone: document.getElementById('cust-phone').value || '',
+        zalo: document.getElementById('cust-zalo').value || '',
+        email: document.getElementById('cust-email').value || '',
+        hotel: document.getElementById('cust-hotel').value || '',
+        room: document.getElementById('cust-room').value || '',
+        registration_date: document.getElementById('cust-date').value
+      };
+
+      try {
+        const response = await fetch(`../api.php?action=save-customer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+        if (resData.error) throw new Error(resData.error);
+
+        closeModal('customerModal');
+        loadData('customers');
+      } catch (err) {
+        alert("Lỗi: " + err.message);
+      }
+    }
+
+    async function saveOrder(e) {
+      e.preventDefault();
+      const id = document.getElementById('ord-id').value;
+      const payload = {
+        id: id,
+        customer_id: document.getElementById('ord-cust').value,
+        phone: document.getElementById('ord-phone').value,
+        email: document.getElementById('ord-email').value,
+        product_id: document.getElementById('ord-prod').value,
+        amount: parseFloat(document.getElementById('ord-amount').value) || 0,
+        status: document.getElementById('ord-status').value,
+        order_date: document.getElementById('ord-date').value
+      };
+
+      try {
+        const response = await fetch(`../api.php?action=save-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+        if (resData.error) throw new Error(resData.error);
+
+        closeModal('orderModal');
+        loadData('orders');
+      } catch (err) {
+        alert("Lỗi tạo/cập nhật đơn hàng: " + err.message);
+      }
+    }
+
+    // 6. EDIT functions
+    function editProduct(id) {
+      const p = productsList.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-type').value = p.type;
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-desc').value = p.description || "";
+      document.getElementById('prod-stock').value = p.stock_quantity !== null ? p.stock_quantity : "";
+      
+      document.getElementById('productModalTitle').innerText = "Chỉnh sửa Sản phẩm";
+      toggleStockField();
+      openModal('productModal');
+    }
+
+    function editCustomer(id) {
+      const c = customersList.find(item => item.id === id);
+      if (!c) return;
+
+      document.getElementById('cust-id').value = c.id;
+      document.getElementById('cust-name').value = c.name;
+      document.getElementById('cust-phone').value = c.phone || "";
+      document.getElementById('cust-zalo').value = c.zalo || "";
+      document.getElementById('cust-email').value = c.email || "";
+      document.getElementById('cust-hotel').value = c.hotel || "";
+      document.getElementById('cust-room').value = c.room || "";
+      document.getElementById('cust-date').value = c.registration_date;
+
+      document.getElementById('customerModalTitle').innerText = "Chỉnh sửa Khách hàng";
+      openModal('customerModal');
+    }
+
+    async function editOrder(id) {
+      try {
+        const response = await fetch(`../api.php?action=orders`);
+        const orders = await response.json();
+        const o = orders.find(item => (item.id === id || item['Mã đặt lịch'] === id));
+        if (!o) return;
+
+        await loadDropdownSelects();
+
+        document.getElementById('ord-id').value = o.id;
+        document.getElementById('ord-cust').value = o.customer_id;
+        document.getElementById('ord-prod').value = o.product_id;
+        document.getElementById('ord-amount').value = o.amount;
+        document.getElementById('ord-status').value = o.status;
+        document.getElementById('ord-date').value = o.order_date;
+
+        onCustomerSelectChange();
+
+        document.getElementById('orderModalTitle').innerText = "Chỉnh sửa Đơn hàng";
+        openModal('orderModal');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // 7. DELETE action
+    async function deleteItem(tabName, id) {
+      if (!confirm("Bạn có chắc chắn muốn xóa mục này?")) return;
+
+      try {
+        const response = await fetch(`../api.php?action=delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: tabName, id })
+        });
+        const resData = await response.json();
+        if (resData.error) throw new Error(resData.error);
+
+        loadData(tabName);
+      } catch (err) {
+        alert("Lỗi khi xóa: " + err.message);
+      }
+    }
+
+    // 7.5. INLINE ACTIONS (WhatsApp, Zalo, Copy, QR, Save)
+    function formatCurrencyInput(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value === '') {
+        input.value = '';
+        return;
+      }
+      let number = parseInt(value, 10);
+      input.value = number.toLocaleString('vi-VN');
+    }
+
+    function saveOrderInline(id, phone, name) {
+      const rawVal = document.getElementById(`amt-${id}`).value;
+      const amountVal = parseFloat(rawVal.replace(/\D/g, '')) || 0;
+      const statusVal = document.getElementById(`status-${id}`).value;
+
+      let saveUrl = "../api.php?action=update-order";
+      let saveBody = { bookingCode: id, amount: amountVal, status: statusVal };
+
+      fetch(saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveBody)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(`Đã lưu thành công đơn ${id} (Số tiền: ${amountVal.toLocaleString('vi-VN')} VND, Trạng thái: ${statusVal})`);
+          loadData('orders');
+        } else {
+          alert('Lỗi khi lưu đơn hàng: ' + (data.error || 'Nguồn lưu thất bại'));
+        }
+      })
+      .catch(err => {
+        alert('Lỗi kết nối: ' + err.message);
+      });
+    }
+
+    function saveOrderInlineBackground(id, amountVal) {
+      const statusVal = document.getElementById(`status-${id}`).value;
+
+      let saveUrl = "../api.php?action=update-order";
+      let saveBody = { bookingCode: id, amount: amountVal, status: statusVal };
+
+      fetch(saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveBody)
+      })
+      .then(res => {
+        console.log(`Auto-saved order ${id} in background`);
+      })
+      .catch(err => {
+        console.error("Auto-save failed:", err);
+      });
+    }
+
+    function sendWhatsAppInline(id, phone, name) {
+      const rawVal = document.getElementById(`amt-${id}`).value;
+      const amountVal = parseFloat(rawVal.replace(/\D/g, '')) || 0;
+      
+      saveOrderInlineBackground(id, amountVal);
+      
+      const cleanPhone = phone.replace(/\+/g, '').replace(/\s/g, '');
+      const formattedAmount = amountVal.toLocaleString('vi-VN');
+      const origin = window.location.origin;
+      const msg = `*Nice Fold Saigon - Hóa đơn dịch vụ / Laundry Invoice* 🧺\n\n----------------------------------\n• Mã đặt lịch / Booking Code: *${id}*\n• Khách hàng / Customer: *${name}*\n\n👉 *TỔNG TIỀN / TOTAL BILL:*\n💰 *${formattedAmount} VND*\n----------------------------------\n\n*Link thanh toán tự động / Payment Link:*\n👉 ${origin}/pay.html?amount=${amountVal}&desc=${id}\n\nXin cảm ơn! / Thank you! ❤️`;
+      
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+
+    function sendZaloInline(phone) {
+      let cleanPhone = phone.replace(/\+/g, '').replace(/\s/g, '');
+      if (cleanPhone.startsWith('84')) {
+        cleanPhone = '0' + cleanPhone.substring(2);
+      }
+      const url = `https://zalo.me/${cleanPhone}`;
+      window.open(url, '_blank');
+    }
+
+    function copyZaloTextInline(id, name) {
+      const rawVal = document.getElementById(`amt-${id}`).value;
+      const amountVal = parseFloat(rawVal.replace(/\D/g, '')) || 0;
+      
+      saveOrderInlineBackground(id, amountVal);
+      
+      const formattedAmount = amountVal.toLocaleString('vi-VN');
+      const origin = window.location.origin;
+      const msg = `*Nice Fold Saigon - Hóa đơn dịch vụ / Laundry Invoice* 🧺\n\n----------------------------------\n• Mã đặt lịch / Booking Code: *${id}*\n• Khách hàng / Customer: *${name}*\n\n👉 *TỔNG TIỀN / TOTAL BILL:*\n💰 *${formattedAmount} VND*\n----------------------------------\n\n*Link thanh toán tự động / Payment Link:*\n👉 ${origin}/pay.html?amount=${amountVal}&desc=${id}\n\nXin cảm ơn! / Thank you! ❤️`;
+      
+      navigator.clipboard.writeText(msg).then(() => {
+        alert(`Đã copy tin nhắn Zalo cho đơn ${id} vào bộ nhớ đệm!`);
+      }).catch(err => {
+        alert('Lỗi khi copy: ' + err.message);
+      });
+    }
+
+    function viewQRInline(id) {
+      const rawVal = document.getElementById(`amt-${id}`).value;
+      const amountVal = parseFloat(rawVal.replace(/\D/g, '')) || 0;
+      
+      saveOrderInlineBackground(id, amountVal);
+      
+      const url = `https://qr.sepay.vn/img?acc=00005547335&bank=TPBank&amount=${amountVal}&des=${id}`;
+      window.open(url, '_blank');
+    }
+
+    // 8. On Load
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadData('customers');
+      await loadData('orders');
+      setupAutoReload();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Checkout | Nice Fold Saigon</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="index.css?v=12.0">
+
+  <style>
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      background-color: var(--color-white);
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Blobs */
+    .gradient-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+
+    .blob-1 {
+      top: -10%;
+      left: -10%;
+      width: 50vw;
+      height: 50vw;
+      background: radial-gradient(circle, rgba(254, 102, 196, 0.2) 0%, transparent 80%);
+    }
+
+    .blob-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 45vw;
+      height: 45vw;
+      background: radial-gradient(circle, rgba(255, 196, 9, 0.15) 0%, transparent 80%);
+    }
+
+    .blob-3 {
+      top: 30%;
+      right: 10%;
+      width: 40vw;
+      height: 40vw;
+      background: radial-gradient(circle, rgba(142, 202, 253, 0.25) 0%, transparent 80%);
+    }
+
+    /* Header adjustments */
+    .main-header {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.6) !important;
+      backdrop-filter: blur(12px) !important;
+      border-bottom: 1px solid rgba(4, 29, 64, 0.05);
+      z-index: 100;
+    }
+
+    /* Checkout Container */
+    .payment-container {
+      width: 100%;
+      max-width: 520px;
+      margin: 140px auto 60px;
+      padding: 0 20px;
+      z-index: 10;
+    }
+
+    .payment-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 35px 80px rgba(4, 29, 64, 0.1);
+      padding: 40px 32px;
+      text-align: center;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+      position: relative;
+    }
+
+    .payment-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 45px 90px rgba(4, 29, 64, 0.14);
+    }
+
+    .logo-container {
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .logo-img {
+      height: 54px;
+      object-fit: contain;
+    }
+
+    .payment-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--color-navy);
+      margin-bottom: 6px;
+    }
+
+    .payment-subtitle {
+      font-size: 0.95rem;
+      color: var(--color-text-body);
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+
+    /* Modern QR Box with Laser Scan Line */
+    .qr-scanner-box {
+      position: relative;
+      display: inline-block;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 28px;
+      border: 1px solid rgba(4, 29, 64, 0.05);
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    .qr-scanner-box:hover {
+      transform: scale(1.03);
+    }
+
+    .qr-image {
+      width: 230px;
+      height: 230px;
+      display: block;
+      border-radius: 16px;
+    }
+
+    .qr-scan-line {
+      position: absolute;
+      left: 16px;
+      width: calc(100% - 32px);
+      height: 3px;
+      background: linear-gradient(to right, transparent, var(--color-pink), var(--color-yellow), transparent);
+      box-shadow: 0 0 8px var(--color-pink);
+      animation: scan 3s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { top: 16px; }
+      50% { top: calc(100% - 19px); }
+      100% { top: 16px; }
+    }
+
+    /* Virtual Credit Card Styling for Account Details */
+    .virtual-bank-card {
+      background: linear-gradient(135deg, #0b2240 0%, #03142c 100%);
+      color: #ffffff;
+      border-radius: 24px;
+      padding: 24px;
+      text-align: left;
+      position: relative;
+      box-shadow: 0 15px 35px rgba(3, 20, 44, 0.25);
+      margin-bottom: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .virtual-bank-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(254, 102, 196, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-chip {
+      width: 44px;
+      height: 34px;
+      background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+      border-radius: 8px;
+      margin-bottom: 24px;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(255,255,255,0.4);
+    }
+
+    .card-chip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75%;
+      height: 75%;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 4px;
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .card-number-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-number {
+      font-family: 'Outfit', monospace;
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #ffffff;
+    }
+
+    .card-holder-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .card-holder-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .card-bank-logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: var(--color-yellow);
+    }
+
+    /* Checkout Details Layout */
+    .details-list {
+      background: rgba(247, 250, 252, 0.85);
+      border-radius: 22px;
+      padding: 24px;
+      text-align: left;
+      margin-bottom: 28px;
+      border: 1px solid rgba(4, 29, 64, 0.04);
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(4, 29, 64, 0.06);
+      font-size: 0.95rem;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: var(--color-text-body);
+      font-weight: 600;
+    }
+
+    .detail-value {
+      color: var(--color-navy);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .highlight-content {
+      color: var(--color-pink) !important;
+      background: #fff0f6;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border: 1px dashed rgba(254, 102, 196, 0.5);
+    }
+
+    .highlight-amount {
+      color: var(--color-blue);
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+
+    /* Interactive Copy Buttons */
+    .copy-btn {
+      background: var(--color-white);
+      color: var(--color-blue);
+      border: 1px solid rgba(0, 132, 255, 0.2);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .copy-btn:hover {
+      background: var(--color-blue);
+      color: var(--color-white);
+      border-color: var(--color-blue);
+      transform: translateY(-1px);
+    }
+
+    .copy-btn.copied {
+      background: #319795 !important;
+      color: #ffffff !important;
+      border-color: #319795 !important;
+    }
+
+    /* Status Bar Styling with Pulse */
+    .status-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px 24px;
+      background: rgba(0, 132, 255, 0.05);
+      border-radius: 20px;
+      color: var(--color-blue);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid rgba(0, 132, 255, 0.12);
+      margin-bottom: 24px;
+      box-shadow: inset 0 2px 4px rgba(0, 132, 255, 0.02);
+      animation: pulse-bg 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-bg {
+      0% { background: rgba(0, 132, 255, 0.04); }
+      50% { background: rgba(0, 132, 255, 0.08); }
+      100% { background: rgba(0, 132, 255, 0.04); }
+    }
+
+    .status-spinner-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(0, 132, 255, 0.15);
+      border-top-color: var(--color-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .status-sub {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--color-text-body);
+      opacity: 0.8;
+    }
+
+    /* Success Card (Payment Confirmed) */
+    .payment-success-card {
+      display: none;
+      animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1.5px solid rgba(74, 222, 128, 0.3);
+      box-shadow: 0 40px 90px rgba(74, 222, 128, 0.15);
+    }
+
+    .success-icon-wrapper {
+      width: 90px;
+      height: 90px;
+      background: #f0fff4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: #38a169;
+      box-shadow: 0 15px 30px rgba(56, 161, 105, 0.15);
+      border: 2px solid rgba(74, 222, 128, 0.4);
+      position: relative;
+    }
+
+    .success-icon-wrapper::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid #38a169;
+      animation: pulse-ring 1.5s infinite ease-out;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .success-icon {
+      font-size: 3.8rem;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .success-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 900;
+      color: #276749;
+      margin-bottom: 12px;
+    }
+
+    .success-text {
+      color: var(--color-navy);
+      font-size: 0.98rem;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      font-weight: 500;
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      pointer-events: none;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Footer styling */
+    .main-footer {
+      margin-top: auto;
+      border-top: 1px solid rgba(4, 29, 64, 0.05);
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Confetti Canvas for success celebration -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Ambient Blobs -->
+  <div class="gradient-blob blob-1"></div>
+  <div class="gradient-blob blob-2"></div>
+  <div class="gradient-blob blob-3"></div>
+
+  <!-- Sticky Header Navigation -->
+  <header class="main-header">
+    <div class="header-container">
+      <a href="./" class="logo-link">
+        <img src="logo.png" alt="Nice Fold Saigon Logo" class="header-logo-img">
+      </a>
+      <nav class="nav-links">
+        <a href="./" class="nav-item">Home</a>
+        <a href="shoes.html" class="nav-item">Shoes Cleaning</a>
+        <a href="bedding.html" class="nav-item">Linens & Bedding</a>
+        <a href="booking.html" class="nav-item">Book Service</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Payment Card Container -->
+  <div class="payment-container">
+    
+    <!-- Billing Card (Pending Payment) -->
+    <div class="payment-card" id="billingCard">
+      <div class="logo-container">
+        <img src="logo.png" alt="Nice Fold Saigon" class="logo-img">
+      </div>
+      
+      <h2 class="payment-title">Checkout Payment</h2>
+      <p class="payment-subtitle">Scan the QR code below using your banking app to pay</p>
+      
+      <div class="qr-scanner-box">
+        <div class="qr-scan-line"></div>
+        <img id="qrCodeImage" src="logo.png" alt="VietQR Pay Code" class="qr-image">
+      </div>
+      
+      <!-- Virtual Bank Card for Account Details -->
+      <div class="virtual-bank-card">
+        <div class="card-chip"></div>
+        <div class="card-label">Account Number / Số tài khoản</div>
+        <div class="card-number-row">
+          <span class="card-number" id="bankAccount">00005547335</span>
+          <button class="copy-btn" onclick="copyText('bankAccount', 'Account number copied!')">Copy</button>
+        </div>
+        <div class="card-holder-row">
+          <div>
+            <div class="card-label" style="margin-bottom: 2px;">Card Holder / Chủ tài khoản</div>
+            <div class="card-holder-name">TRAN THI HOANG OANH</div>
+          </div>
+          <div class="card-bank-logo">TPBank</div>
+        </div>
+      </div>
+      
+      <!-- Checkout Details -->
+      <div class="details-list">
+        <div class="detail-row">
+          <span class="detail-label">Total Bill / Số tiền:</span>
+          <span class="detail-value highlight-amount">
+            <span id="payAmount">0 VND</span>
+            <button class="copy-btn" id="copyAmountBtn">Copy</button>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Description / Nội dung:</span>
+          <span class="detail-value">
+            <span id="payContent" class="highlight-content">NF12345</span>
+            <button class="copy-btn" id="copyContentBtn">Copy</button>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Pulse Status Checking Bar -->
+      <div class="status-bar" id="statusBar">
+        <div class="status-spinner-row">
+          <div class="status-spinner"></div>
+          <span>Waiting for your transfer...</span>
+        </div>
+        <span class="status-sub">Đang chờ bạn quét mã chuyển khoản...</span>
+      </div>
+      
+      <p style="font-size: 0.78rem; color: var(--color-text-body); margin: 0; font-weight: 500; opacity: 0.85;">
+        * Auto-verification takes 10-30 seconds after transaction is successful.
+      </p>
+    </div>
+
+    <!-- Success Card (Payment Confirmed) -->
+    <div class="payment-card payment-success-card" id="successCard">
+      <div class="success-icon-wrapper">
+        <span class="success-icon">✓</span>
+      </div>
+      
+      <h2 class="success-title">Payment Confirmed!</h2>
+      <p class="success-text">
+        Thank you! We have successfully received payment for booking code <strong id="successContentCode" style="color: var(--color-pink);">NF12345</strong>.<br>
+        Your laundry is now being prioritized and processed.
+      </p>
+      
+      <div class="details-list" style="background: #f0fff4; border-color: #c6f6d5; margin-bottom: 28px;">
+        <div class="detail-row" style="border-bottom-color: #c6f6d5;">
+          <span class="detail-label" style="color: #276749;">Amount Received / Số tiền đã nhận:</span>
+          <strong class="detail-value" style="color: #22543d; font-size: 1.15rem;" id="successAmount">0 VND</strong>
+        </div>
+        <div class="detail-row" style="border-bottom: none;">
+          <span class="detail-label" style="color: #276749;">Verification Status / Trạng thái:</span>
+          <strong class="detail-value" style="color: #22543d;">Auto-Verified & Logged</strong>
+        </div>
+      </div>
+
+      <a href="./" class="pill-button btn-primary btn-block" style="text-decoration: none; display: block; text-align: center; font-size: 1rem; padding: 14px 28px;">
+        Back to Home / Về trang chủ
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Simplified Footer -->
+  <footer class="main-footer">
+    <div class="footer-bottom" style="border-top: none; padding: 24px 0; text-align: center;">
+      <p style="font-size: 0.9rem; color: var(--color-navy); opacity: 0.85; font-weight: 500;">
+        &copy; 2026 Nice Fold Saigon. All rights reserved.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // SePay Configuration (Public Info)
+    const SEPAY_CONFIG = {
+      accountNumber: '00005547335',
+      bankCode: 'TPBank'
+    };
+
+    let pollingInterval = null;
+
+    // Detect environment (local vs live)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocal ? 'http://localhost:3000/api' : '';
+
+    // 1. Utility function to copy text to clipboard with button feedback
+    function copyText(elementId, alertMsg) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showCopyFeedback(event.target, 'Copied!');
+      }).catch(() => {
+        alert('Copy failed, please copy manually.');
+      });
+    }
+
+    function showCopyFeedback(button, tempText) {
+      if (!button || !button.classList.contains('copy-btn')) return;
+      const originalText = button.textContent;
+      button.textContent = tempText;
+      button.classList.add('copied');
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+      }, 2000);
+    }
+
+    // 2. Parse URL parameters
+    function getUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        amount: parseInt(params.get('amount')) || 150000, 
+        desc: params.get('desc') || params.get('code') || 'NF1029' 
+      };
+    }
+
+    // 3. Initialize Payment Page
+    document.addEventListener('DOMContentLoaded', () => {
+      let { amount, desc } = getUrlParams();
+
+      if (!amount) amount = 150000;
+      if (!desc) desc = 'NF1029';
+
+      // Populate interface
+      document.getElementById('payAmount').textContent = amount.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('payContent').textContent = desc;
+
+      // Set dynamic QR code image from SePay
+      document.getElementById('qrCodeImage').src = `https://qr.sepay.vn/img?acc=${SEPAY_CONFIG.accountNumber}&bank=${SEPAY_CONFIG.bankCode}&amount=${amount}&des=${desc}`;
+
+      // Copy buttons binding
+      document.getElementById('copyAmountBtn').addEventListener('click', (e) => {
+        navigator.clipboard.writeText(amount.toString()).then(() => {
+          showCopyFeedback(e.target, 'Copied!');
+        });
+      });
+
+      document.getElementById('copyContentBtn').addEventListener('click', (e) => {
+        navigator.clipboard.writeText(desc).then(() => {
+          showCopyFeedback(e.target, 'Copied!');
+        });
+      });
+
+      // Start check-payment polling
+      startPolling(amount, desc);
+    });
+
+    // 4. Order Status Webhook Polling
+    function startPolling(targetAmount, targetDesc) {
+      if (pollingInterval) clearInterval(pollingInterval);
+
+      console.log(`Checking order status for Booking Code: ${targetDesc}`);
+
+      // Query order status every 4 seconds
+      pollingInterval = setInterval(() => {
+        checkOrderStatus(targetAmount, targetDesc);
+      }, 4000);
+    }
+
+    async function checkOrderStatus(targetAmount, targetDesc) {
+      try {
+        let url = 'api.php?action=orders';
+        
+        // Cache busting timestamp
+        const separator = url.includes('?') ? '&' : '?';
+        const fetchUrl = `${url}${separator}t=${Date.now()}`;
+
+        const response = await fetch(fetchUrl, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        const orders = Array.isArray(data) ? data : (data.orders || []);
+
+        // Find matching order by booking code (case-insensitive, trimmed)
+        const matchingOrder = orders.find(o => {
+          const id = (o['Mã đặt lịch'] || o.id || '').toString().trim().toLowerCase();
+          return id === targetDesc.trim().toLowerCase();
+        });
+
+        if (matchingOrder) {
+          let status = matchingOrder['Trạng thái đơn'] || matchingOrder.status || 'Chờ XN';
+          console.log(`Order ${targetDesc} status: ${status}`);
+          
+          if (status === 'Hoàn thành' || status === 'completed' || status === 'Đã thanh toán' || status === 'Đã TT' || status === 'paid') {
+            onPaymentSuccess(targetAmount, targetDesc);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking order status:', err);
+      }
+    }
+
+    // 5. Payment Success Transition
+    function onPaymentSuccess(amount, desc) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+
+      // Update success card info
+      document.getElementById('successAmount').textContent = amount.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('successContentCode').textContent = desc;
+
+      // Play success audio feedback
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+        
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+          gain2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.35);
+        }, 140);
+      } catch (e) {
+        console.log('Audio blocked or not supported');
+      }
+
+      // Show success card and trigger confetti celebration
+      document.getElementById('billingCard').style.display = 'none';
+      document.getElementById('successCard').style.display = 'block';
+      
+      triggerConfettiCelebration();
+    }
+
+    // 6. Custom Confetti Celebration Effect
+    function triggerConfettiCelebration() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.style.display = 'block';
+      
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+      
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const colors = ['#fe66c4', '#ffc409', '#0084ff', '#38a169', '#93ccf9'];
+      const confettiCount = 130;
+      const confettiArray = [];
+
+      class Confetti {
+        constructor() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * -height - 20;
+          this.size = Math.random() * 8 + 6;
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+          this.speed = Math.random() * 4 + 3;
+          this.angle = Math.random() * 360;
+          this.spinSpeed = Math.random() * 4 - 2;
+          this.wind = Math.random() * 1.5 - 0.75;
+        }
+
+        update() {
+          this.y += this.speed;
+          this.x += this.wind;
+          this.angle += this.spinSpeed;
+        }
+
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.angle * Math.PI / 180);
+          ctx.fillStyle = this.color;
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+          ctx.restore();
+        }
+      }
+
+      for (let i = 0; i < confettiCount; i++) {
+        confettiArray.push(new Confetti());
+      }
+
+      let animationFrame;
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        let active = false;
+
+        confettiArray.forEach(p => {
+          p.update();
+          p.draw();
+          if (p.y < height) active = true;
+        });
+
+        if (active) {
+          animationFrame = requestAnimationFrame(animate);
+        } else {
+          canvas.style.display = 'none';
+          cancelAnimationFrame(animationFrame);
+        }
+      }
+
+      animate();
+    }
+  </script>
+</body>
+</html>

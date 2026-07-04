@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO Meta Tags -->
+  <title>Book Your Laundry Appointment | Nice Fold Saigon</title>
+  <meta name="description" content="Book your premium hotel laundry service in District 1 HCMC. Calculate your laundry price dynamically and send pre-filled booking details directly to our staff via WhatsApp or Zalo in under 2 minutes.">
+  
+  <!-- CSS Link -->
+  <link rel="stylesheet" href="index.css?v=12.0">
+
+  <style>
+    /* Checkout Modal Overlays */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(4, 29, 64, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+      animation: fadeInOverlay 0.3s ease forwards;
+    }
+    .modal-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 25px 60px rgba(4, 29, 64, 0.15);
+      width: 100%;
+      max-width: 480px;
+      padding: 30px 24px;
+      position: relative;
+      animation: slideInCard 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--color-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+    .modal-close-btn:hover {
+      background: var(--color-navy);
+      color: #ffffff;
+    }
+    .modal-logo-container {
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .modal-logo-img {
+      height: 44px;
+      object-fit: contain;
+    }
+    .modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--color-navy);
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .modal-subtitle {
+      font-size: 0.85rem;
+      color: var(--color-text-body);
+      margin-bottom: 20px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .modal-summary-box {
+      background: rgba(4, 29, 64, 0.03);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      text-align: left;
+      border: 1px solid rgba(4, 29, 64, 0.05);
+    }
+    .summary-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      border-bottom: 1px dashed rgba(4, 29, 64, 0.1);
+      padding-bottom: 4px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+      color: var(--color-text-body);
+    }
+    .summary-row:last-child {
+      margin-bottom: 0;
+    }
+    .summary-row span {
+      font-weight: 600;
+    }
+    .summary-row strong {
+      color: var(--color-pink);
+    }
+    .modal-qr-box {
+      position: relative;
+      display: inline-block;
+      padding: 10px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      margin: 0 auto 20px;
+      border: 1px solid rgba(4, 29, 64, 0.04);
+      overflow: hidden;
+      text-align: center;
+    }
+    .modal-qr-container-wrapper {
+      text-align: center;
+      display: block;
+    }
+    .modal-qr-image {
+      width: 170px;
+      height: 170px;
+      display: inline-block;
+      border-radius: 12px;
+    }
+    .modal-qr-scan-line {
+      position: absolute;
+      left: 10px;
+      width: calc(100% - 20px);
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--color-pink), var(--color-yellow), transparent);
+      box-shadow: 0 0 6px var(--color-pink);
+      animation: modalScan 2.5s linear infinite;
+    }
+    @keyframes modalScan {
+      0% { top: 10px; }
+      50% { top: calc(100% - 12px); }
+      100% { top: 10px; }
+    }
+    /* Modal Payment Side-by-Side Flex Layout */
+    .modal-payment-flex {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 440px) {
+      .modal-payment-flex {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+    }
+    .modal-payment-left {
+      flex: 0 0 170px;
+      display: flex;
+      justify-content: center;
+    }
+    .modal-payment-right {
+      flex: 1;
+      text-align: left;
+      background: rgba(4, 29, 64, 0.02);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(4, 29, 64, 0.04);
+      min-width: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .modal-bank-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--color-text-body);
+      opacity: 0.8;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .modal-bank-value {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: 6px;
+    }
+    .modal-bank-value-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    /* Modal copy button */
+    .modal-copy-btn {
+      background: rgba(4, 29, 64, 0.05);
+      color: var(--color-blue);
+      border: 1px solid rgba(0, 132, 255, 0.2);
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-copy-btn:hover {
+      background: var(--color-blue);
+      color: #ffffff;
+      border-color: var(--color-blue);
+    }
+    .modal-copy-btn.copied {
+      background: #38a169 !important;
+      color: #ffffff !important;
+      border-color: #38a169 !important;
+    }
+    .modal-details-list {
+      background: rgba(4, 29, 64, 0.025);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 20px;
+      border: 1px solid rgba(4, 29, 64, 0.04);
+    }
+    .modal-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(4, 29, 64, 0.05);
+      font-size: 0.85rem;
+    }
+    .modal-detail-row:last-child {
+      border-bottom: none;
+    }
+    .modal-detail-value {
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-highlight-content {
+      color: var(--color-pink) !important;
+      background: #fff0f6;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      border: 1px dashed rgba(254, 102, 196, 0.4);
+    }
+    .modal-copy-btn-dark {
+      background: #ffffff;
+      color: var(--color-blue);
+      border: 1px solid rgba(0, 132, 255, 0.2);
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-copy-btn-dark:hover {
+      background: var(--color-blue);
+      color: #ffffff;
+    }
+    .modal-copy-btn-dark.copied {
+      background: #38a169 !important;
+      color: #ffffff !important;
+      border-color: #38a169 !important;
+    }
+    /* Status bar inside modal */
+    .modal-status-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      background: rgba(0, 132, 255, 0.04);
+      border-radius: 14px;
+      color: var(--color-blue);
+      font-weight: 700;
+      font-size: 0.82rem;
+      border: 1px solid rgba(0, 132, 255, 0.1);
+    }
+    .modal-status-spinner-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-status-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 132, 255, 0.15);
+      border-top-color: var(--color-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .modal-status-sub {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--color-text-body);
+      opacity: 0.8;
+    }
+    /* Success View */
+    .modal-success-icon-wrapper {
+      width: 70px;
+      height: 70px;
+      background: #f0fff4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: #38a169;
+      box-shadow: 0 10px 20px rgba(56, 161, 105, 0.1);
+      border: 2px solid rgba(74, 222, 128, 0.3);
+    }
+    .modal-success-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+    .modal-success-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #276749;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .modal-success-text {
+      color: var(--color-navy);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideInCard {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Decorative Ambient Blobs -->
+  <div class="gradient-blob blob-1"></div>
+  <div class="gradient-blob blob-2"></div>
+  <div class="gradient-blob blob-3"></div>
+
+  <!-- Sticky Header Navigation -->
+  <header class="main-header" id="mainHeader">
+    <div class="header-container">
+      <a href="./" class="logo-link" id="headerLogoLink">
+        <img src="logo.png" alt="Nice Fold Saigon Logo" class="header-logo-img">
+      </a>
+      
+      <nav class="nav-links" id="mainNav">
+        <a href="./" class="nav-item">Home</a>
+        <a href="./#pricing" class="nav-item">Pricing</a>
+        <a href="shoes.html" class="nav-item">Shoes Cleaning</a>
+        <a href="bedding.html" class="nav-item">Linens & Bedding</a>
+        <a href="booking.html" class="nav-item active">Book Appointment</a>
+      </nav>
+
+      <div class="header-cta" id="headerCtaWrapper" style="display: flex; align-items: center;">
+        <div class="lang-switch-wrapper" style="margin-right: 1.25rem;">
+          <select class="lang-select" id="langSelect">
+            <option value="en">🇬🇧 EN</option>
+            <option value="vi">🇻🇳 VI</option>
+          </select>
+        </div>
+        <a href="booking.html" class="pill-button btn-primary btn-pulse-attention" id="headerCtaBtn">Book Now</a>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Booking & Price Calculator Section -->
+  <section class="booking-section" id="booking-section" style="padding-top: 140px; padding-bottom: 80px;">
+    <div class="section-container">
+      <div class="booking-grid">
+        
+        <!-- Booking Form Card (Left) -->
+        <div class="booking-form-card" id="bookingFormCard">
+          <div class="booking-form-header">
+            <span class="section-badge">Quick Booking</span>
+            <h2>Book Your Laundry Appointment</h2>
+          </div>
+          <form id="whatsappBookingForm">
+            <!-- Row 1: Full Name (Full Width) -->
+            <div class="form-group">
+              <label for="booking-name">Your Full Name *</label>
+              <input type="text" id="booking-name" required placeholder="e.g. John Doe">
+            </div>
+
+            <!-- Row 2: WhatsApp/Phone (Full Width for layout spacing) -->
+            <div class="form-group">
+              <label for="booking-whatsapp">WhatsApp/Phone Number *</label>
+              <div style="display: flex; gap: 8px;">
+                <select id="booking-country-code" style="width: 120px; flex-shrink: 0;" required>
+                  <option value="+84">🇻🇳 +84</option>
+                  <option value="+7">🇷🇺 +7</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+61">🇦🇺 +61</option>
+                  <option value="+82">🇰🇷 +82</option>
+                  <option value="+81">🇯🇵 +81</option>
+                  <option value="+65">🇸🇬 +65</option>
+                  <option value="+49">🇩🇪 +49</option>
+                  <option value="+33">🇫🇷 +33</option>
+                  <option value="+91">🇮🇳 +91</option>
+                </select>
+                <input type="tel" id="booking-whatsapp" required placeholder="e.g. 978900616" pattern="[0-9]*" inputmode="numeric" style="flex-grow: 1;">
+              </div>
+            </div>
+
+            <!-- Row 2b: Email Address -->
+            <div class="form-group">
+              <label for="booking-email">Email Address *</label>
+              <input type="email" id="booking-email" required placeholder="e.g. john.doe@example.com">
+            </div>
+
+
+            <!-- Row 3: Service Package & Estimated Weight -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="booking-service">Service Package *</label>
+                <select id="booking-service" required>
+                  <option value="standard">Standard Wash & Fold (24h) - 40,000 VND / kg (Min 3kg)</option>
+                  <option value="sameday" selected>Same-day Wash & Fold (8h-12h) - 50,000 VND / kg (Min 4kg)</option>
+                  <option value="express">Express Wash & Fold (4h) - 70,000 VND / kg (Min 4kg)</option>
+                  <option value="shoes">Shoes Cleaning - From 150,000 VND / pair (Min 1 pair)</option>
+                  <option value="topper">Topper Cleaning - 60,000 VND / kg (Min 1kg)</option>
+                  <option value="curtain">Curtain Cleaning - 50,000 VND / kg (Min 1kg)</option>
+                  <option value="bedding">Beddings & Linens - 40,000 VND / kg (Min 3kg)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="booking-weight" id="weight-input-label">Estimated Weight (kg) *</label>
+                <input type="number" id="booking-weight" value="4" min="3" step="0.1" required>
+              </div>
+            </div>
+
+            <!-- Row 4: Preferred Pickup Time (Full Width) -->
+            <div class="form-group">
+              <label for="booking-pickup-time">Preferred Pickup Time *</label>
+              <input type="datetime-local" id="booking-pickup-time" required>
+            </div>
+
+            <!-- Row 5: Where should we collect (Full Width) -->
+            <div class="form-group">
+              <label for="booking-pickup-type">Where should we collect? *</label>
+              <select id="booking-pickup-type" required>
+                <option value="frontdesk" selected>Leave at hotel front desk (Lễ tân)</option>
+                <option value="direct">Meet directly in lobby (Gặp trực tiếp)</option>
+              </select>
+            </div>
+
+            <!-- Row 6: Shipping Option (Full Width) -->
+            <div class="form-group">
+              <label for="booking-ship">Shipping Option *</label>
+              <select id="booking-ship" required>
+                <option value="roundtrip" selected>Round-trip Pickup & Delivery (50,000 VND)</option>
+                <option value="deliveryonly">Return Delivery Only (25,000 VND)</option>
+                <option value="pickuponly">Pickup Collection Only (25,000 VND)</option>
+                <option value="selfservice">Self Drop-off & self collection (0 VND)</option>
+              </select>
+            </div>
+
+            <!-- Row 7: Separate Whites checkbox (Full Width) -->
+            <div class="form-group" style="padding-top: 0.25rem; margin-bottom: 1.5rem;">
+              <div id="whites-checkbox-group" style="display: flex; align-items: center; justify-content: flex-start; gap: 0.75rem; width: 100%;">
+                <input type="checkbox" id="booking-whites" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--color-pink); flex-shrink: 0;">
+                <label for="booking-whites" style="margin-bottom: 0; cursor: pointer; font-weight: 700; color: var(--color-navy); font-size: 0.95rem; text-transform: none; letter-spacing: normal;">
+                  Separate white clothes (+30,000 VND)
+                </label>
+              </div>
+              <div id="shoes-express-group" style="display: none; align-items: center; justify-content: flex-start; gap: 0.75rem; width: 100%;">
+                <input type="checkbox" id="booking-shoes-express" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--color-pink); flex-shrink: 0;">
+                <label for="booking-shoes-express" style="margin-bottom: 0; cursor: pointer; font-weight: 700; color: var(--color-navy); font-size: 0.95rem; text-transform: none; letter-spacing: normal;">
+                  Express 24h Shoes (+100,000 VND/pair)
+                </label>
+              </div>
+            </div>
+
+            <!-- Row 8: Hotel & Room (Double Column) -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="booking-hotel">Hotel Name & Address *</label>
+                <textarea id="booking-hotel" rows="2" required placeholder="e.g. Caravelle Hotel, 19 Lam Son Square, District 1"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="booking-room">Room Number</label>
+                <textarea id="booking-room" rows="2" placeholder="e.g. Room 502 (or leave at front desk)"></textarea>
+              </div>
+            </div>
+
+            <!-- Row 9: Payment Option (Full Width) -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label for="booking-payment-method">Payment Option *</label>
+              <select id="booking-payment-method" required style="width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(4, 29, 64, 0.15); font-family: inherit; font-size: 0.95rem; color: var(--color-navy); background-color: var(--color-white); outline: none; transition: border-color 0.2s ease;">
+                <option value="banktransfer">Bank transfer (Vietnamese bank only)</option>
+                <option value="cash">Cash (VND)</option>
+              </select>
+            </div>
+
+             <button type="submit" id="submit-booking" class="pill-button btn-primary btn-block" style="margin-top: 1.5rem; font-weight: 800; font-size: 1.05rem; padding: 14px 28px;">
+               🛎️ Confirm Order
+             </button>
+          </form>
+        </div>
+
+        <!-- Estimator Panel (Right) -->
+        <div class="booking-estimator-card" id="estimatorCard">
+          <span class="section-badge" id="calculatorBadge">Price Calculator</span>
+          <h2>Calculate & Pre-Fill Your Booking</h2>
+          <p>Input your estimated details. The live estimator calculates your total cost instantly in VND and USD. When ready, click to send pre-filled order text.</p>
+          
+          <div class="estimator-panel" id="estimatorLivePanel">
+            <h4>Live Estimation Summary</h4>
+            <div class="estimator-row">
+              <span>Estimated Weight:</span>
+              <span id="calc-weight-display">4 kg</span>
+            </div>
+            <div class="estimator-row">
+              <span>Selected Package:</span>
+              <span id="calc-service-display">Same-day Wash & Fold</span>
+            </div>
+            <div class="estimator-row">
+              <span id="calc-surcharge-label">White Clothes Surcharge:</span>
+              <span id="calc-whites-display">0 VND</span>
+            </div>
+            <div class="estimator-row">
+              <span>Shipping Fee:</span>
+              <span id="calc-ship-display">50,000 VND</span>
+            </div>
+            <hr class="estimator-divider">
+            <div class="estimator-total-row">
+              <span>Estimated Total:</span>
+              <div class="estimator-total-pricing">
+                <span id="calc-total-vnd" class="total-vnd">250,000 VND</span>
+                <span id="calc-total-usd" class="total-usd">(~$10.00 USD)</span>
+              </div>
+            </div>
+            <p class="calculator-notice">* Minimum weights apply (Standard: 3kg | Same-day & Express: 4kg). Ship fee is 25,000 VND/way.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Footer -->
+  <footer class="main-footer" id="mainFooter">
+    <div class="section-container">
+      <div class="footer-grid">
+        
+        <!-- Brand Info -->
+        <div class="footer-brand">
+          <img src="logo.png" alt="Nice Fold Saigon Logo" class="footer-logo-img">
+          <p>Saigon's premium express hotel laundry and dry cleaning service. Designed for tourists, expats, and business travelers who value quality, speed, and hygiene.</p>
+        </div>
+
+        <!-- Links -->
+        <div class="footer-links">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="./">Home</a></li>
+            <li><a href="./#pricing">Pricing packages</a></li>
+            <li><a href="shoes.html">Shoes Cleaning</a></li>
+            <li><a href="bedding.html">Linens & Bedding</a></li>
+            <li><a href="booking.html">Book Appointment</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="footer-contact">
+          <h4>Connect with Us</h4>
+          <p>📞 <strong>WhatsApp:</strong> <a href="https://wa.me/84373991602" target="_blank" class="contact-link">0373.991.602</a></p>
+          <p>💬 <strong>Zalo:</strong> <a href="https://zalo.me/0373991602" target="_blank" class="contact-link">0373.991.602</a></p>
+          <p>☎️ <strong>Hotline:</strong> <a href="tel:0373991602" class="contact-link">0373.991.602</a></p>
+          <p>📍 <strong>Address:</strong> <a href="https://maps.app.goo.gl/gJG1N3VRNuTYXMSy9" target="_blank" class="contact-link">121/10 Le Thi Rieng, Ben Thanh, District 1, HCMC</a></p>
+          <p>🚚 <strong>Coverage:</strong> District 1, 3, and Thao Dien (District 2)</p>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nice Fold Saigon. All rights reserved. "Crispest Fold Guaranteed!"</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vertical Floating Action Buttons (CTAs) -->
+  <div class="vertical-floating-ctas">
+    <a href="https://wa.me/84373991602" target="_blank" class="floating-cta-btn cta-whatsapp" aria-label="Chat on WhatsApp">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.864-9.83.002-2.623-1.01-5.09-2.855-6.94C16.636 1.986 14.177 1.01 11.554 1.01 6.112 1.01 1.69 5.424 1.687 10.841c-.001 1.737.478 3.353 1.39 4.793L2.096 20.3l4.55-1.146zm11.987-6.893c-.29-.144-1.716-.845-1.981-.94-.266-.097-.46-.144-.654.144-.193.29-.747.94-.916 1.134-.168.193-.337.218-.627.073-1.282-.64-2.11-.92-2.92-2.31-.22-.38.22-.35.63-.82.11-.13.16-.29.08-.43-.08-.15-.65-1.58-.9-2.17-.25-.59-.5-.51-.68-.52l-.58-.01c-.19 0-.51.07-.78.36-.27.29-1.03 1-1.03 2.45s1.05 2.85 1.2 3.04c.15.19 2.07 3.16 5.02 4.43.7.3 1.25.49 1.68.63.71.22 1.35.19 1.86.11.57-.08 1.71-.7 1.95-1.37.24-.68.24-1.26.17-1.37-.07-.11-.26-.18-.55-.32z"/>
+      </svg>
+    </a>
+    <a href="tel:0373991602" class="floating-cta-btn cta-phone" aria-label="Call Hotline">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M21.384 17.791c-1.12-1.12-2.943-1.12-4.063 0l-1.012 1.012c-.179-.089-.374-.182-.586-.282-1.921-.922-3.791-2.791-4.713-4.713-.1-.212-.193-.407-.282-.586l1.012-1.012c1.12-1.12 1.12-2.943 0-4.063L9.658 1.063c-1.12-1.12-2.943-1.12-4.063 0L3.89 2.768c-2.476 2.476-2.969 6.273-1.216 9.479 2.378 4.349 5.86 7.831 10.209 10.209 1.482.809 3.094 1.214 4.707 1.214 1.7 0 3.391-.453 4.772-1.364l1.322-1.322c1.12-1.12 1.12-2.943 0-4.063l-2.3-2.3z"/>
+      </svg>
+    </a>
+    <a href="https://zalo.me/0373991602" target="_blank" class="floating-cta-btn cta-zalo" aria-label="Chat on Zalo">
+      <span class="zalo-text-icon">Zalo</span>
+    </a>
+    <button id="chatbotToggle" type="button" class="floating-cta-btn cta-chat" aria-label="Open chat">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+        <path d="M4 4h16v12H7l-5 5V4zm2 2v8.17L8.17 12H18V6H6z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="chatbotWidget" class="chatbot-widget hidden">
+    <div id="chatbotWindow" class="chatbot-window hidden" aria-live="polite">
+      <div class="chatbot-header">
+        <div>
+          <div class="chatbot-title">Nice Fold Assistant</div>
+          <div class="chatbot-subtitle">Hotel laundry help</div>
+        </div>
+        <button id="chatbotClose" class="chatbot-close" aria-label="Close chat">✕</button>
+      </div>
+      <div id="chatbotBody" class="chatbot-body"></div>
+      <div class="chatbot-actions">
+        <button id="chatbotBookBtn" class="pill-button btn-primary chatbot-book-btn" type="button">Go to waiting list form</button>
+        <form id="chatbotForm" class="chatbot-form">
+          <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Ask about price, pickup, or service..." autocomplete="off" required>
+          <button type="submit" class="pill-button btn-outline chatbot-send-btn">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Floating Mobile CTA Bar -->
+  <div class="mobile-floating-cta-bar" id="mobileCtaBar">
+    <a href="https://wa.me/84373991602" target="_blank" class="floating-cta-item bg-whatsapp-color">
+      <span>WhatsApp</span>
+    </a>
+    <a href="./" class="floating-cta-item bg-navy-color">
+      <span>Home</span>
+    </a>
+    <a href="https://zalo.me/0373991602" target="_blank" class="floating-cta-item bg-zalo-color">
+      <span>Zalo</span>
+    </a>
+  </div>
+
+  <!-- Confetti Canvas for success celebration inside modal -->
+  <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:2100; pointer-events:none; display:none;"></canvas>
+
+  <!-- Checkout Modal Overlay -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeCheckoutModal()">✕</button>
+      
+      <!-- Billing Pending view -->
+      <div id="checkoutBillingView">
+        <div class="modal-logo-container">
+          <img src="logo.png" alt="Nice Fold Saigon" class="modal-logo-img">
+        </div>
+        <h3 class="modal-title">Confirm & Pay</h3>
+        <p class="modal-subtitle">Your order has been registered. Scan the QR to pay the estimated amount to confirm instantly.</p>
+        
+        <!-- Summary Box -->
+        <div class="modal-summary-box">
+          <div class="summary-title">Order Details / Chi tiết đơn</div>
+          <div class="summary-row">
+            <span>Booking Code:</span>
+            <strong id="modalCode">NF1029</strong>
+          </div>
+          <div class="summary-row">
+            <span>Service Gói giặt:</span>
+            <span id="modalService">Same-day Wash & Fold</span>
+          </div>
+          <div class="summary-row">
+            <span>Pickup / Thời gian:</span>
+            <span id="modalPickupTime">30/06/2026, 10:02 PM</span>
+          </div>
+          <div class="summary-row">
+            <span>Hotel & Room / Phòng:</span>
+            <span id="modalHotelDetails">Caravelle Hotel, P. 502</span>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Flex Layout (QR & Bank details) -->
+        <div class="modal-payment-flex">
+          <div class="modal-payment-left">
+            <div class="modal-qr-box" style="margin-bottom: 0;">
+              <div class="modal-qr-scan-line"></div>
+              <img id="modalQrCodeImage" src="logo.png" alt="VietQR Pay Code" class="modal-qr-image">
+            </div>
+          </div>
+          <div class="modal-payment-right">
+            <div class="modal-bank-label">Bank / Ngân hàng</div>
+            <div class="modal-bank-value">TPBank</div>
+            
+            <div class="modal-bank-label">Account / Số TK</div>
+            <div class="modal-bank-value-row">
+              <span id="modalBankAccount" style="font-family: monospace; font-weight:700;">00005547335</span>
+              <button class="modal-copy-btn" onclick="copyModalText('modalBankAccount', 'Copied!')">Copy</button>
+            </div>
+            
+            <div class="modal-bank-label">Holder / Chủ TK</div>
+            <div class="modal-bank-value" style="font-size: 0.75rem; margin-bottom: 0;">TRAN THI HOANG OANH</div>
+          </div>
+        </div>
+
+        <!-- Price & Content copy table -->
+        <div class="modal-details-list">
+          <div class="modal-detail-row">
+            <span class="detail-label">Amount / Số tiền:</span>
+            <span class="modal-detail-value highlight-amount">
+              <span id="modalPayAmount">0 VND</span>
+              <button class="modal-copy-btn-dark" id="modalCopyAmountBtn">Copy</button>
+            </span>
+          </div>
+          <div class="modal-detail-row">
+            <span class="detail-label">Description / Nội dung:</span>
+            <span class="modal-detail-value">
+              <span id="modalPayContent" class="modal-highlight-content">NF12345</span>
+              <button class="modal-copy-btn-dark" id="modalCopyContentBtn">Copy</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- Real-time checking bar -->
+        <div class="modal-status-bar" id="modalStatusBar">
+          <div class="modal-status-spinner-row">
+            <div class="modal-status-spinner"></div>
+            <span>Waiting for your transfer...</span>
+          </div>
+          <span class="modal-status-sub">Đang chờ hệ thống tự động xác nhận chuyển khoản...</span>
+        </div>
+      </div>
+
+      <!-- Billing Success view -->
+      <div id="checkoutSuccessView" style="display: none;">
+        <div class="modal-success-icon-wrapper">
+          <span class="modal-success-icon">✓</span>
+        </div>
+        <h3 class="modal-success-title">Payment Confirmed!</h3>
+        <p class="modal-success-text">
+          Thank you! We have successfully received payment for booking code <strong id="modalSuccessContentCode" style="color: var(--color-pink);">NF12345</strong>.<br>
+          Your laundry is now being processed.
+        </p>
+        
+        <div class="modal-details-list" style="background: #f0fff4; border-color: #c6f6d5; margin-bottom: 24px;">
+          <div class="modal-detail-row" style="border-bottom-color: #c6f6d5;">
+            <span class="detail-label" style="color: #276749;">Amount Received:</span>
+            <strong class="modal-detail-value" style="color: #22543d; font-size: 1.1rem;" id="modalSuccessAmount">0 VND</strong>
+          </div>
+          <div class="modal-detail-row" style="border-bottom: none;">
+            <span class="detail-label" style="color: #276749;">Status / Trạng thái:</span>
+            <strong class="modal-detail-value" style="color: #22543d;">Auto-Verified</strong>
+          </div>
+        </div>
+
+        <button class="pill-button btn-primary btn-block" style="padding: 12px;" onclick="closeCheckoutModal()">
+          Close / Đóng
+        </button>
+      </div>
+
+      <!-- Billing Cash view -->
+      <div id="checkoutCashView" style="display: none;">
+        <div class="modal-success-icon-wrapper" style="background: rgba(4, 29, 64, 0.05); color: var(--color-navy);">
+          <span class="modal-success-icon">✓</span>
+        </div>
+        <h3 class="modal-success-title" style="color: var(--color-navy);">Order Confirmed!</h3>
+        <p class="modal-success-text">
+          Thank you! Your order has been successfully registered with booking code <strong id="modalCashContentCode" style="color: var(--color-pink);">NF12345</strong>.<br>
+          Please prepare cash payment of <strong id="modalCashAmount" style="color: var(--color-navy);">0 VND</strong> when our driver returns your fresh laundry.
+        </p>
+        
+        <button class="pill-button btn-primary btn-block" style="padding: 12px; margin-top: 1.5rem;" onclick="closeCheckoutModal()">
+          Close / Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Link -->
+  <script src="app.js?v=17.6"></script>
+</body>
+</html>

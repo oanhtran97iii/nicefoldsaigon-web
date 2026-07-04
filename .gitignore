@@ -1,0 +1,19 @@
+# Dependency directories
+node_modules/
+
+# Local databases
+brain.db
+brain_backup.db
+
+# Environment variables & secrets
+.env
+
+# Logs
+email_log.txt
+
+# OS metadata
+.DS_Store
+
+# Large backups
+nice-fold-saigon-frontend.zip
+*.zip

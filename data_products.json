@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "name": "Standard Wash & Fold (24h)",
+        "type": "service",
+        "price": 40000,
+        "description": "Standard wash & fold laundry service. Min weight 3kg.",
+        "stock_quantity": null
+    },
+    {
+        "id": 2,
+        "name": "Same-day Wash & Fold (8h-12h)",
+        "type": "service",
+        "price": 50000,
+        "description": "Same-day express wash & fold service. Min weight 4kg.",
+        "stock_quantity": null
+    },
+    {
+        "id": 3,
+        "name": "Express Wash & Fold (4h)",
+        "type": "service",
+        "price": 70000,
+        "description": "Super express wash & fold laundry service. Min weight 4kg.",
+        "stock_quantity": null
+    },
+    {
+        "id": 4,
+        "name": "Shoes Cleaning",
+        "type": "service",
+        "price": 150000,
+        "description": "Premium shoe cleaning and sanitization. Min 1 pair.",
+        "stock_quantity": null
+    },
+    {
+        "id": 5,
+        "name": "Topper Cleaning",
+        "type": "service",
+        "price": 60000,
+        "description": "Topper mattress cleaning service. Min weight 1kg.",
+        "stock_quantity": null
+    },
+    {
+        "id": 6,
+        "name": "Curtain Cleaning",
+        "type": "service",
+        "price": 50000,
+        "description": "Curtain cleaning service. Min weight 1kg.",
+        "stock_quantity": null
+    },
+    {
+        "id": 7,
+        "name": "Beddings & Linens",
+        "type": "service",
+        "price": 40000,
+        "description": "Bedding, sheet, and linen cleaning. Min weight 3kg.",
+        "stock_quantity": null
+    }
+]
