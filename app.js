@@ -328,7 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
     "Thank you! Your order has been successfully registered with booking code ": "Cảm ơn bạn! Đơn hàng của bạn đã được đăng ký thành công với mã đặt lịch ",
     "Please prepare cash payment of ": "Vui lòng chuẩn bị tiền mặt thanh toán ",
     " when our driver returns your fresh laundry.": " khi tài xế giao trả quần áo sạch thơm cho bạn.",
-    "121/10 Le Thi Rieng, Ben Thanh, District 1, HCMC": "121/10 Lê Thị Riêng, Bến Thành, Quận 1, TP. HCM"
+    "121/10 Le Thi Rieng, Ben Thanh, District 1, HCMC": "121/10 Lê Thị Riêng, Bến Thành, Quận 1, TP. HCM",
+    
+    // Checkout Modal Translations
+    "Confirm Booking": "Xác nhận đặt lịch",
+    "Your order has been registered. Please select a chat platform below to send your details and finalize your booking.": "Đơn hàng của bạn đã được ghi nhận. Vui lòng chọn nền tảng chat bên dưới để gửi thông tin và hoàn tất đặt lịch.",
+    "Order Details": "Chi tiết đơn hàng",
+    "Booking Code:": "Mã đặt lịch:",
+    "Service:": "Gói dịch vụ:",
+    "Pickup Time:": "Thời gian nhận:",
+    "Hotel & Room:": "Khách sạn & Phòng:",
+    "Estimated Total:": "Tổng tiền tạm tính:",
+    "💬 Send via WhatsApp": "💬 Gửi qua WhatsApp",
+    "💬 Send via Zalo (Copy)": "💬 Gửi qua Zalo (Copy)"
   };
 
   const getTranslation = (text) => {
@@ -2633,8 +2645,11 @@ window.copyModalText = function(elementId, successText) {
 };
 
 window.triggerCheckoutModal = function(amount, desc, serviceLabel, pickupTimeStr, hotelDetailsStr, messageText) {
+  const isVi = (localStorage.getItem('site_lang') || 'en') === 'vi';
+  const displayService = isVi ? (getTranslation(serviceLabel) || serviceLabel) : serviceLabel;
+
   document.getElementById('modalCode').textContent = desc;
-  document.getElementById('modalService').textContent = serviceLabel;
+  document.getElementById('modalService').textContent = displayService;
   document.getElementById('modalPickupTime').textContent = pickupTimeStr;
   document.getElementById('modalHotelDetails').textContent = hotelDetailsStr;
   document.getElementById('modalPayAmount').textContent = amount.toLocaleString('vi-VN') + ' VND';
