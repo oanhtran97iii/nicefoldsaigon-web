@@ -1910,9 +1910,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const localScript = salesScript[bookingSession.lang];
 
+    // --- STEP-BY-STEP BOOKING FLOW ACTIVE ---
+    if (bookingSession.active) {
+      processBookingStep(text, id);
+      return;
+    }
+
+    // --- DETECT BOOKING INITIATION REQUEST ---
+    const isBookingRequest = id === 'proceed_booking' || 
+                             id === 'booking' || 
+                             id === 'buy' || 
+                             (text && (
+                               text.toLowerCase().includes('đặt lịch') || 
+                               text.toLowerCase().includes('dat lich') || 
+                               text.toLowerCase().includes('booking') || 
+                               text.toLowerCase().includes('giặt đồ') ||
+                               text.toLowerCase().includes('giat do') ||
+                               text.toLowerCase().includes('book laundry') ||
+                               text.toLowerCase().includes('schedule pickup')
+                             ));
+
+    if (isBookingRequest) {
+      startBookingFlow();
+      return;
+    }
+
     // --- INSTANT STATIC CHIP HANDLERS ---
     if (id === 'sameday' || id === 'express' || id === 'standard' || id === 'other') {
       const pack = localScript.packages[id];
+      bookingSession.data.packageId = id;
+      bookingSession.data.packageName = pack.title;
       appendBotMessage(pack.details);
       renderChips([
         { id: 'proceed_booking', label: localScript.proceedBookingChip },
@@ -1931,17 +1958,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const qnaChips = localScript.questions.slice(0, 5).map(q => ({ id: q.id, label: q.short }));
       qnaChips.push({ id: 'back_main', label: localScript.backToMenuChip });
       renderChips(qnaChips);
-      return;
-    }
-
-    if (id === 'proceed_booking') {
-      appendBotMessage(bookingSession.lang === 'vi' ? 
-        "Để đặt lịch nhận đồ nhanh chóng, bạn vui lòng chọn **Book Online** ở đầu trang hoặc click đường dẫn sau để mở Form đặt lịch: <a href='booking.html'>Trang Đặt Lịch</a>. Sau khi điền xong, hệ thống sẽ giúp bạn gửi thông tin sang Zalo hoặc WhatsApp chỉ với 1 click!" :
-        "To schedule your pickup, please click **Book Online** at the top of the page, or click here to open the Booking Form: <a href='booking.html'>Booking Page</a>. Once filled, you can send details directly to Zalo/WhatsApp with just 1 click!"
-      );
-      renderChips([
-        { id: 'back_main', label: localScript.mainMenuChip }
-      ]);
       return;
     }
 
@@ -2310,9 +2326,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const parsed = parseBookingDetails(details);
     const localScript = salesScript[bookingSession.lang];
 
+    // Estimate total cước
+    let totalVnd = 170000;
+    const serviceClean = parsed.service.toLowerCase();
+    if (serviceClean.includes('same-day') || serviceClean.includes('sameday') || serviceClean.includes('trong ngày')) {
+      totalVnd = 250000;
+    } else if (serviceClean.includes('express') || serviceClean.includes('hỏa tốc')) {
+      totalVnd = 330000;
+    } else if (serviceClean.includes('giày') || serviceClean.includes('shoe')) {
+      totalVnd = 150000;
+    }
+    if (parsed.whites === localScript.whitesYes) {
+      totalVnd += 30000;
+    }
+
+    // Generate unique booking code
+    const bookingCode = 'NF' + Math.floor(1000 + Math.random() * 9000);
+
     // Format pre-filled booking message block
     const finalBookingMessage = `${bookingSession.lang === 'vi' ? 'Yêu cầu đặt lịch giặt ủi Nice Fold Saigon' : 'Nice Fold Saigon - Laundry Booking Request'}
 ---------------------------------------
+Mã đơn hàng / Booking Code: #${bookingCode}
 1️⃣ ${localScript.confirmLabels.time}: ${parsed.time}
 2️⃣ ${localScript.confirmLabels.name}: ${parsed.name}
 3️⃣ ${localScript.confirmLabels.hotel}: ${parsed.hotel}
@@ -2320,7 +2354,34 @@ document.addEventListener('DOMContentLoaded', () => {
 5️⃣ ${localScript.confirmLabels.option}: ${parsed.option}
 6️⃣ ${localScript.confirmLabels.whites}: ${parsed.whites}
 7️⃣ ${localScript.confirmLabels.phone}: ${parsed.phone}
-📦 ${localScript.confirmLabels.service}: ${parsed.service}`;
+📦 ${localScript.confirmLabels.service}: ${parsed.service}
+💰 Tổng cước tạm tính / Total: ${totalVnd.toLocaleString('vi-VN')} VND`;
+
+    // Save booking to backend SQLite database
+    fetch('api.php?action=booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        bookingCode: bookingCode,
+        name: parsed.name,
+        phone: parsed.phone,
+        email: '',
+        hotelAddress: parsed.hotel,
+        roomNumber: parsed.room,
+        service: parsed.service,
+        totalVnd: totalVnd
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log('Chatbot booking saved to DB:', data);
+    })
+    .catch(err => {
+      console.error('Failed to save chatbot booking to DB:', err);
+    });
+
     // Send direct instructions and buttons
     appendBotMessage(localScript.submitInstructions);
     appendInlineZaloWhatsappButtons(finalBookingMessage);
