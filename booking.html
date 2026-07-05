@@ -521,14 +521,18 @@
               </div>
             </div>
 
-            <!-- Row 9: Payment Option (Full Width) -->
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-              <label for="booking-payment-method">Payment Option *</label>
-              <select id="booking-payment-method" required style="width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(4, 29, 64, 0.15); font-family: inherit; font-size: 0.95rem; color: var(--color-navy); background-color: var(--color-white); outline: none; transition: border-color 0.2s ease;">
-                <option value="banktransfer">Bank transfer (Vietnamese bank only)</option>
-                <option value="cash">Cash (VND)</option>
-              </select>
+            <!-- Row 9: Google Maps Link (Single Column) -->
+            <div class="form-row">
+              <div class="form-group" style="width: 100%;">
+                <label for="booking-map-link">Google Maps Link (Highly recommended for faster delivery!)</label>
+                <input type="url" id="booking-map-link" placeholder="e.g. https://maps.app.goo.gl/... (Paste maps link here)">
+              </div>
             </div>
+
+            <!-- Hidden Payment Option to preserve JS compatibility -->
+            <select id="booking-payment-method" style="display: none;">
+              <option value="cash" selected></option>
+            </select>
 
              <div class="form-buttons" style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem; width: 100%;">
                <button type="submit" id="submit-whatsapp" class="pill-button btn-whatsapp" style="display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 800; font-size: 1.02rem; padding: 14px 28px; border: none; background-color: #25d366; color: white; width: 100%; cursor: pointer; border-radius: 25px;">

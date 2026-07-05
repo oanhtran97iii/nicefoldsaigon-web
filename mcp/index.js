@@ -600,6 +600,115 @@ function createMcpServer() {
       }
     );
 
+    // 5. Tool: get_unread_business_signals
+    server.tool(
+      "get_unread_business_signals",
+      {},
+      async () => {
+        logCall("get_unread_business_signals", {});
+
+        try {
+            const newOrders = await dbQuery(`
+                SELECT o.booking_code, c.name as customer_name, p.name as service, 
+                       c.hotel, c.room, o.amount, o.order_date as date
+                FROM orders o
+                LEFT JOIN customers c ON o.customer_id = c.id
+                LEFT JOIN products p ON o.product_id = p.id
+                WHERE o.agent_notified = 0 OR o.agent_notified IS NULL
+                ORDER BY o.id ASC
+            `);
+
+            const newPayments = await dbQuery(`
+                SELECT id as transaction_id, reference_code, transfer_amount as amount, 
+                       content, gateway, transaction_date as date
+                FROM sepay_transactions
+                WHERE agent_notified = 0 OR agent_notified IS NULL
+                ORDER BY id ASC
+            `);
+
+            const missingItems = await dbQuery(`
+                SELECT id as missing_item_id, booking_code, photo_path, date_added as date
+                FROM missing_items
+                WHERE (agent_notified = 0 OR agent_notified IS NULL) AND is_resolved = 0
+                ORDER BY id ASC
+            `);
+
+            return {
+                content: [{ type: "text", text: JSON.stringify({
+                    success: true,
+                    new_orders: newOrders,
+                    new_payments: newPayments,
+                    missing_items: missingItems
+                }) }]
+            };
+        } catch (err) {
+            return {
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
+            };
+        }
+      }
+    );
+
+    // 6. Tool: acknowledge_business_signals
+    server.tool(
+      "acknowledge_business_signals",
+      {
+        booking_codes: z.array(z.string()).optional().describe("Mảng mã đơn hàng cần xác nhận đã thông báo, ví dụ: ['NF1234']"),
+        transaction_ids: z.array(z.number()).optional().describe("Mảng ID giao dịch SePay cần xác nhận đã thông báo, ví dụ: [1, 2]"),
+        missing_item_ids: z.array(z.number()).optional().describe("Mảng ID báo cáo đồ thiếu cần xác nhận đã thông báo, ví dụ: [1]")
+      },
+      async ({ booking_codes, transaction_ids, missing_item_ids }) => {
+        logCall("acknowledge_business_signals", { booking_codes, transaction_ids, missing_item_ids });
+
+        try {
+            let updatedOrders = 0;
+            let updatedPayments = 0;
+            let updatedMissingItems = 0;
+
+            if (booking_codes && booking_codes.length > 0) {
+                const placeholders = booking_codes.map(() => '?').join(',');
+                const res = await dbRun(
+                    `UPDATE orders SET agent_notified = 1 WHERE booking_code IN (${placeholders})`,
+                    booking_codes
+                );
+                updatedOrders = res.changes || 0;
+            }
+
+            if (transaction_ids && transaction_ids.length > 0) {
+                const placeholders = transaction_ids.map(() => '?').join(',');
+                const res = await dbRun(
+                    `UPDATE sepay_transactions SET agent_notified = 1 WHERE id IN (${placeholders})`,
+                    transaction_ids
+                );
+                updatedPayments = res.changes || 0;
+            }
+
+            if (missing_item_ids && missing_item_ids.length > 0) {
+                const placeholders = missing_item_ids.map(() => '?').join(',');
+                const res = await dbRun(
+                    `UPDATE missing_items SET agent_notified = 1 WHERE id IN (${placeholders})`,
+                    missing_item_ids
+                );
+                updatedMissingItems = res.changes || 0;
+            }
+
+            return {
+                content: [{ type: "text", text: JSON.stringify({
+                    success: true,
+                    message: "Đã xác nhận các tín hiệu kinh doanh thành công",
+                    updated_orders: updatedOrders,
+                    updated_payments: updatedPayments,
+                    updated_missing_items: updatedMissingItems
+                }) }]
+            };
+        } catch (err) {
+            return {
+                content: [{ type: "text", text: JSON.stringify({ success: false, message: `Lỗi hệ thống: ${err.message}` }) }]
+            };
+        }
+      }
+    );
+
     return server;
 }
 

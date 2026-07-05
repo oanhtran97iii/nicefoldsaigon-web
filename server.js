@@ -1,13 +1,18 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 const express = require('express');
+const compression = require('compression');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const botManager = require('./bot_manager');
-
 // Load environment variables
 dotenv.config();
+
+const botManager = require('./bot_manager');
 
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'brain.db');
@@ -373,6 +378,22 @@ async function initializeAndMigrateDb() {
             );
         `);
 
+        await dbRun(`
+            CREATE TABLE IF NOT EXISTS sepay_transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sepay_id INTEGER UNIQUE,
+                gateway TEXT,
+                transaction_date TEXT,
+                account_number TEXT,
+                content TEXT,
+                transfer_type TEXT,
+                transfer_amount REAL,
+                accumulated REAL,
+                reference_code TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         // Check for new columns and migrate
         const columnsInfo = await dbQuery("PRAGMA table_info(orders);");
         const existingColumns = columnsInfo.map(c => c.name);
@@ -387,7 +408,10 @@ async function initializeAndMigrateDb() {
             "out_for_delivery_time": "TEXT",
             "delivered_time": "TEXT",
             "fold_report_photo_url": "TEXT",
-            "delivery_proof_photo_url": "TEXT"
+            "delivery_proof_photo_url": "TEXT",
+            "receipt_number": "TEXT",
+            "lang": "TEXT",
+            "agent_notified": "INTEGER DEFAULT 0"
         };
 
         for (const [colName, colType] of Object.entries(newCols)) {
@@ -395,6 +419,30 @@ async function initializeAndMigrateDb() {
                 console.log(`Adding column ${colName} to orders table...`);
                 await dbRun(`ALTER TABLE orders ADD COLUMN ${colName} ${colType};`);
             }
+        }
+
+        // Migrate customers table to add map_link
+        const custColumnsInfo = await dbQuery("PRAGMA table_info(customers);");
+        const existingCustColumns = custColumnsInfo.map(c => c.name);
+        if (!existingCustColumns.includes("map_link")) {
+            console.log("Adding column map_link to customers table...");
+            await dbRun("ALTER TABLE customers ADD COLUMN map_link TEXT;");
+        }
+
+        // Migrate sepay_transactions table to add agent_notified
+        const sepayColumnsInfo = await dbQuery("PRAGMA table_info(sepay_transactions);");
+        const existingSepayColumns = sepayColumnsInfo.map(c => c.name);
+        if (!existingSepayColumns.includes("agent_notified")) {
+            console.log("Adding column agent_notified to sepay_transactions table...");
+            await dbRun("ALTER TABLE sepay_transactions ADD COLUMN agent_notified INTEGER DEFAULT 0;");
+        }
+
+        // Migrate missing_items table to add agent_notified
+        const missingColumnsInfo = await dbQuery("PRAGMA table_info(missing_items);");
+        const existingMissingColumns = missingColumnsInfo.map(c => c.name);
+        if (!existingMissingColumns.includes("agent_notified")) {
+            console.log("Adding column agent_notified to missing_items table...");
+            await dbRun("ALTER TABLE missing_items ADD COLUMN agent_notified INTEGER DEFAULT 0;");
         }
 
         // 2. Insert Default Products if empty
@@ -428,6 +476,7 @@ async function initializeAndMigrateDb() {
 // --- Initialize Express Server ---
 const app = express();
 
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -446,6 +495,8 @@ const basicAuth = (req, res, next) => {
 
     const ADMIN_USER = process.env.ADMIN_USER || 'nf-admin';
     const ADMIN_PASS = process.env.ADMIN_PASS || 'nicefoldsg@190';
+
+    console.log(`[Basic Auth Debug] Expected: "${ADMIN_USER}" / "${ADMIN_PASS}". Received: "${user}" / "${pass}"`);
 
     if (user === ADMIN_USER && pass === ADMIN_PASS) {
         return next();
@@ -576,7 +627,7 @@ app.all('/api.php', async (req, res) => {
                             orderObj["Thời gian nhận"] = d.order_date || "";
                             orderObj["Gói giặt"] = d.product_name || "";
                             orderObj["Tổng tiền bill tạm tính"] = d.amount || 0;
-                            orderObj["Trạng thái đơn"] = d.status || "Chờ XN";
+                            orderObj["Trạng thái đơn"] = d.order_status || d.status || "Chờ lấy";
                             orderObj.email = d.email || "";
                         }
                         return orderObj;
@@ -624,7 +675,7 @@ app.all('/api.php', async (req, res) => {
                             orderObj["Thời gian nhận"] = d.order_date || "";
                             orderObj["Gói giặt"] = d.product_name || "";
                             orderObj["Tổng tiền bill tạm tính"] = d.amount || 0;
-                            orderObj["Trạng thái đơn"] = d.status || "Chờ XN";
+                            orderObj["Trạng thái đơn"] = d.order_status || d.status || "Chờ lấy";
                             orderObj.email = d.email || "";
                         }
                         return orderObj;
@@ -677,9 +728,23 @@ app.all('/api.php', async (req, res) => {
                 const service = body.service || "";
                 const amount = body.totalVnd || 0;
                 const bookingCode = body.bookingCode || '';
+                const mapLink = body.mapLink || '';
 
                 if (!bookingCode) {
                     return res.status(400).json({ error: "Missing booking code" });
+                }
+
+                // Deduplicate: check if an identical order was created in the last 120 seconds
+                const recentOrder = await dbGet(
+                    `SELECT o.booking_code FROM orders o
+                     JOIN customers c ON o.customer_id = c.id
+                     WHERE c.phone = ? AND o.amount = ? AND o.order_date >= datetime('now', '-2 minutes')
+                     LIMIT 1`,
+                    [phone, amount]
+                );
+                if (recentOrder) {
+                    console.log(`Deduplicated duplicate booking request for phone ${phone}, returning existing code: ${recentOrder.booking_code}`);
+                    return res.json({ success: true, bookingCode: recentOrder.booking_code, deduplicated: true });
                 }
 
                 // Check if customer exists based on phone
@@ -688,13 +753,13 @@ app.all('/api.php', async (req, res) => {
                 if (custRow) {
                     customerId = custRow.id;
                     await dbRun(
-                        "UPDATE customers SET name = ?, email = ?, hotel = ?, room = ? WHERE id = ?",
-                        [name, email, hotel, room, customerId]
+                        "UPDATE customers SET name = ?, email = ?, hotel = ?, room = ?, map_link = ? WHERE id = ?",
+                        [name, email, hotel, room, mapLink, customerId]
                     );
                 } else {
                     const result = await dbRun(
-                        "INSERT INTO customers (name, phone, email, hotel, room) VALUES (?, ?, ?, ?, ?)",
-                        [name, phone, email, hotel, room]
+                        "INSERT INTO customers (name, phone, email, hotel, room, map_link) VALUES (?, ?, ?, ?, ?, ?)",
+                        [name, phone, email, hotel, room, mapLink]
                     );
                     customerId = result.lastID;
                 }
@@ -720,8 +785,8 @@ app.all('/api.php', async (req, res) => {
                 }
 
                 await dbRun(
-                    "INSERT INTO orders (booking_code, customer_id, product_id, amount, status) VALUES (?, ?, ?, ?, 'Chờ XN')",
-                    [bookingCode, customerId, productId, amount]
+                    "INSERT INTO orders (booking_code, customer_id, product_id, amount, status, lang) VALUES (?, ?, ?, ?, 'Chờ XN', ?)",
+                    [bookingCode, customerId, productId, amount, body.lang || 'en']
                 );
 
                 // Trigger booking confirmation mail in background
@@ -736,6 +801,7 @@ app.all('/api.php', async (req, res) => {
                         service: service,
                         hotelAddress: hotel,
                         roomNumber: room,
+                        mapLink: mapLink,
                         pickupTime: body.pickupTime || new Date().toLocaleString(),
                         paymentMethod: body.paymentMethod || 'banktransfer',
                         totalVnd: amount,
@@ -795,19 +861,83 @@ app.all('/api.php', async (req, res) => {
                 const itemId = body.id || body.bookingCode || body.booking_code;
 
                 if (itemId) {
-                    // Update
+                    // Fetch the current order status from DB
+                    const oldOrder = await dbGet(`
+                        SELECT o.status, o.order_status, o.booking_code, o.amount, c.name as cust_name 
+                        FROM orders o
+                        LEFT JOIN customers c ON o.customer_id = c.id
+                        WHERE o.id = ? OR o.booking_code = ?
+                    `, [itemId, itemId]);
+                    
+                    const currentStatus = oldOrder ? oldOrder.order_status : '';
+                    const bookingCode = oldOrder ? oldOrder.booking_code : itemId;
+                    const custName = oldOrder ? oldOrder.cust_name : 'Khách hàng';
+
+                    let orderStatus = body.status;
+                    let paymentStatus = body.status;
+                    let paidNotificationNeeded = false;
+
+                    if (body.status === 'Hoàn thành' || body.status === 'Đã giao') {
+                        if (currentStatus === 'Chờ giao chưa thanh toán') {
+                            orderStatus = 'Chờ giao (đã thanh toán)';
+                            paymentStatus = 'Đã thanh toán';
+                            paidNotificationNeeded = true;
+                        } else {
+                            orderStatus = 'Hoàn thành';
+                            paymentStatus = 'Hoàn thành';
+                        }
+                    } else if (body.status === 'Chờ XN' || body.status === 'Chờ lấy' || body.status === 'Chưa lấy') {
+                        orderStatus = 'Chưa lấy';
+                        paymentStatus = 'Chưa lấy';
+                    }
+
+                    // Update database
                     const isDigit = /^\d+$/.test(String(itemId));
                     if (isDigit) {
                         await dbRun(
-                            "UPDATE orders SET amount = ?, status = ? WHERE id = ?",
-                            [body.amount, body.status, Number(itemId)]
+                            "UPDATE orders SET amount = ?, status = ?, order_status = ? WHERE id = ?",
+                            [body.amount, paymentStatus, orderStatus, Number(itemId)]
                         );
                     } else {
                         await dbRun(
-                            "UPDATE orders SET amount = ?, status = ? WHERE booking_code = ?",
-                            [body.amount, body.status, itemId]
+                            "UPDATE orders SET amount = ?, status = ?, order_status = ? WHERE booking_code = ?",
+                            [body.amount, paymentStatus, orderStatus, String(itemId)]
                         );
                     }
+
+                    // If admin checked payment for an unpaid delivery, notify shipper in DON_GIAO group and edit card
+                    if (paidNotificationNeeded) {
+                        setTimeout(() => {
+                            try {
+                                botManager.sendTelegramMessage(
+                                    botManager.GROUPS.DON_GIAO, 
+                                    `🔔 <b>XÁC NHẬN THANH TOÁN:</b> Đơn hàng <b>#${bookingCode}</b> của khách <b>${custName}</b> đã được thanh toán thành công! Shipper chỉ cần giao đồ, không cần thu tiền COD.`
+                                );
+                                botManager.updateDeliveryCardToPaid(bookingCode);
+                            } catch (tErr) {
+                                console.error('Failed to send Telegram payment confirmation:', tErr);
+                            }
+                        }, 100);
+                    }
+
+                    // Also sync to n8n
+                    try {
+                        const n8nUrl = process.env.N8N_UPDATE_ORDER_URL || "https://hoangoanh.app.n8n.cloud/webhook/update-order";
+                        await fetch(n8nUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+                            body: JSON.stringify({
+                                bookingCode: String(bookingCode),
+                                amount: body.amount,
+                                status: orderStatus,
+                                skip_telegram: true
+                            }),
+                            signal: AbortSignal.timeout(3000)
+                        });
+                    } catch (e) {
+                        console.error("n8n update order from save-order failed:", e.message);
+                    }
+
                     return res.json({ success: true });
                 } else {
                     // Create
@@ -826,13 +956,18 @@ app.all('/api.php', async (req, res) => {
                     }
 
                     const bookingCode = body.booking_code || body.bookingCode || ('NF' + String(Math.floor(Date.now() / 1000)).slice(-4));
+                    const statusVal = body.status || 'pending';
+                    const orderStatusVal = body.order_status || (statusVal.includes('Chờ giao') || statusVal === 'Chờ giặt' || statusVal === 'Đã lấy' ? statusVal : 'Chưa lấy');
+
+                    const cust = await dbGet("SELECT name, email, phone, hotel, room, map_link FROM customers WHERE id = ?", [body.customer_id]);
+                    const langVal = body.lang || (cust && (cust.phone || '').replace(/\D/g, '').startsWith('84') ? 'vi' : 'en');
+
                     const result = await dbRun(
-                        "INSERT INTO orders (booking_code, customer_id, product_id, amount, status, order_date) VALUES (?, ?, ?, ?, ?, ?)",
-                        [bookingCode, body.customer_id, productId, body.amount, body.status || 'pending', body.order_date || new Date().toISOString()]
+                        "INSERT INTO orders (booking_code, customer_id, product_id, amount, status, order_status, order_date, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        [bookingCode, body.customer_id, productId, body.amount, statusVal, orderStatusVal, body.order_date || new Date().toISOString(), langVal]
                     );
 
                     // Send confirmation email & Telegram notification
-                    const cust = await dbGet("SELECT name, email, phone, hotel, room FROM customers WHERE id = ?", [body.customer_id]);
                     const prodRow = await dbGet("SELECT name FROM products WHERE id = ?", [productId]);
                     const prodName = prodRow ? prodRow.name : "Laundry Service";
                     
@@ -841,7 +976,9 @@ app.all('/api.php', async (req, res) => {
                     }
 
                     // Trigger Telegram group notification for manually created orders
-                    if (cust) {
+                    if (orderStatusVal.includes('Chờ giao') || statusVal.includes('Chờ giao')) {
+                        setTimeout(() => botManager.sendDeliveryAlert(bookingCode), 100);
+                    } else if (cust) {
                         try {
                             botManager.sendOrderAlert({
                                 bookingCode: bookingCode,
@@ -850,6 +987,7 @@ app.all('/api.php', async (req, res) => {
                                 service: prodName,
                                 hotelAddress: cust.hotel || '',
                                 roomNumber: cust.room || '',
+                                mapLink: cust.map_link || '',
                                 pickupTime: body.order_date || new Date().toLocaleString(),
                                 paymentMethod: 'cash',
                                 totalVnd: body.amount,
@@ -872,6 +1010,37 @@ app.all('/api.php', async (req, res) => {
                     return res.status(400).json({ error: "Missing item ID" });
                 }
 
+                // Query old order details first
+                const oldOrder = await dbGet(`
+                    SELECT o.status, o.order_status, o.booking_code, o.amount, p.name as product_name, c.name as cust_name, c.email as cust_email
+                    FROM orders o
+                    LEFT JOIN products p ON o.product_id = p.id
+                    LEFT JOIN customers c ON o.customer_id = c.id
+                    WHERE o.id = ? OR o.booking_code = ?
+                `, [itemId, itemId]);
+
+                let orderStatus = body.status;
+                let paymentStatus = body.status;
+                let paidNotificationNeeded = false;
+
+                const currentStatus = oldOrder ? oldOrder.order_status : '';
+                const bookingCode = oldOrder ? oldOrder.booking_code : itemId;
+                const custName = oldOrder ? oldOrder.cust_name : 'Khách hàng';
+
+                if (body.status === 'Hoàn thành' || body.status === 'Đã giao') {
+                    if (currentStatus === 'Chờ giao chưa thanh toán') {
+                        orderStatus = 'Chờ giao (đã thanh toán)';
+                        paymentStatus = 'Đã thanh toán';
+                        paidNotificationNeeded = true;
+                    } else {
+                        orderStatus = 'Hoàn thành';
+                        paymentStatus = 'Hoàn thành';
+                    }
+                } else if (body.status === 'Chờ XN' || body.status === 'Chờ lấy' || body.status === 'Chưa lấy') {
+                    orderStatus = 'Chưa lấy';
+                    paymentStatus = 'Chưa lấy';
+                }
+
                 let n8nSuccess = false;
                 let n8nError = "";
 
@@ -882,9 +1051,10 @@ app.all('/api.php', async (req, res) => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
                         body: JSON.stringify({
-                            bookingCode: String(itemId),
+                            bookingCode: String(bookingCode),
                             amount: body.amount,
-                            status: body.status
+                            status: orderStatus,
+                            skip_telegram: body.status === 'Đã lấy' || body.status === 'Đã nhận'
                         }),
                         signal: AbortSignal.timeout(3000)
                     });
@@ -894,20 +1064,32 @@ app.all('/api.php', async (req, res) => {
                     console.error("n8n update order failed:", e.message);
                 }
 
-                // Query old order details first
-                const oldOrder = await dbGet(`
-                    SELECT o.status, o.booking_code, o.amount, p.name as product_name, c.name as cust_name, c.email as cust_email
-                    FROM orders o
-                    LEFT JOIN products p ON o.product_id = p.id
-                    LEFT JOIN customers c ON o.customer_id = c.id
-                    WHERE o.id = ? OR o.booking_code = ?
-                `, [itemId, itemId]);
-
                 const isDigit = /^\d+$/.test(String(itemId));
                 if (isDigit) {
-                    await dbRun("UPDATE orders SET amount = ?, status = ? WHERE id = ?", [body.amount, body.status, Number(itemId)]);
+                    await dbRun("UPDATE orders SET amount = ?, status = ?, order_status = ? WHERE id = ?", [body.amount, paymentStatus, orderStatus, Number(itemId)]);
                 } else {
-                    await dbRun("UPDATE orders SET amount = ?, status = ? WHERE booking_code = ?", [body.amount, body.status, itemId]);
+                    await dbRun("UPDATE orders SET amount = ?, status = ?, order_status = ? WHERE booking_code = ?", [body.amount, paymentStatus, orderStatus, String(itemId)]);
+                }
+
+                // If admin checked payment for an unpaid delivery, notify shipper in DON_GIAO group and edit card
+                if (paidNotificationNeeded) {
+                    setTimeout(() => {
+                        try {
+                            botManager.sendTelegramMessage(
+                                botManager.GROUPS.DON_GIAO, 
+                                `🔔 <b>XÁC NHẬN THANH TOÁN:</b> Đơn hàng <b>#${bookingCode}</b> của khách <b>${custName}</b> đã được thanh toán thành công! Shipper chỉ cần giao đồ, không cần thu tiền COD.`
+                            );
+                            botManager.updateDeliveryCardToPaid(bookingCode);
+                        } catch (tErr) {
+                            console.error('Failed to send Telegram payment confirmation:', tErr);
+                        }
+                    }, 100);
+                }
+
+                // Trigger Telegram delivery alert if order transitioned to 'Chờ giao'
+                if ((orderStatus.includes('Chờ giao') || body.status.includes('Chờ giao')) && !paidNotificationNeeded) {
+                    const finalCode = oldOrder ? oldOrder.booking_code : itemId;
+                    setTimeout(() => botManager.sendDeliveryAlert(finalCode), 100);
                 }
 
                 // Send payment confirmation email if transitioned to 'Hoàn thành'
@@ -926,13 +1108,34 @@ app.all('/api.php', async (req, res) => {
                 let content = body.content || body.description || '';
                 const amount = body.transferAmount ? parseFloat(body.transferAmount) : 0;
 
+                // Log transaction to database
+                try {
+                    await dbRun(`
+                        INSERT OR IGNORE INTO sepay_transactions 
+                        (sepay_id, gateway, transaction_date, account_number, content, transfer_type, transfer_amount, accumulated, reference_code)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, [
+                        body.id,
+                        body.gateway,
+                        body.transactionDate,
+                        body.accountNumber,
+                        content,
+                        body.transferType || 'in',
+                        amount,
+                        body.accumulated,
+                        body.referenceCode
+                    ]);
+                } catch (dbErr) {
+                    console.error('Failed to log SePay transaction to database:', dbErr);
+                }
+
                 if (!content) {
-                    return res.json({ success: false, message: "No transfer content found" });
+                    return res.json({ success: true, message: "Transaction logged, but content is empty" });
                 }
 
                 const match = content.match(/(NF\d{4})/i);
                 if (!match) {
-                    return res.json({ success: false, message: "Could not match booking code in content" });
+                    return res.json({ success: true, message: "Transaction logged, no booking code found" });
                 }
 
                 const bookingCode = match[1].toUpperCase();
@@ -955,7 +1158,7 @@ app.all('/api.php', async (req, res) => {
                     }
                 }
 
-                return res.json({ success: true, message: `Order ${bookingCode} completed` });
+                return res.json({ success: true, message: `Order ${bookingCode} completed and transaction logged` });
             }
 
             case 'delete': {
@@ -1021,10 +1224,28 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // Serve Admin Static Files behind Auth
-app.use('/admin', basicAuth, express.static(path.join(__dirname, 'admin')));
+app.use('/admin', basicAuth, express.static(path.join(__dirname, 'admin'), {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } else {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+    }
+}));
 
 // Serve Static Site Files
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname), {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } else {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+    }
+}));
 
 // Start Server
 app.listen(PORT, () => {

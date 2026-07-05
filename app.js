@@ -461,6 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pickupTimeInput = document.getElementById('booking-pickup-time');
   const hotelInput = document.getElementById('booking-hotel');
   const roomInput = document.getElementById('booking-room');
+  const mapLinkInput = document.getElementById('booking-map-link');
 
   const restrictPhoneInput = (inputEl, countrySelectEl) => {
     if (!inputEl || !countrySelectEl) return;
@@ -737,6 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const pickupTime = pickupTimeRaw ? pickupTimeRaw.replace('T', ' ') : '';
       const hotelAddress = hotelInput.value.trim();
       const roomNumber = roomInput ? roomInput.value.trim() : '';
+      const mapLink = mapLinkInput ? mapLinkInput.value.trim() : '';
 
       // Get pickup method (Lễ tân or Gặp trực tiếp)
       const pickupTypeSelect = document.getElementById('booking-pickup-type');
@@ -828,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ⚖️ Khối lượng dự kiến: ${weight} kg
 🛵 Giao nhận: ${pickupTypeLabel}
 🏢 Khách sạn: ${hotelAddress}
-🚪 Số phòng: ${roomNumber}
+${mapLink ? `📍 Bản đồ: ${mapLink}\n` : ''}🚪 Số phòng: ${roomNumber}
 ⏰ Thời gian nhận đồ: ${pickupTime}
 💵 Phương thức thanh toán: ${paymentMethod === 'cash' ? 'Tiền mặt (Cash)' : 'Chuyển khoản (Bank Transfer)'}
 💵 Tổng tiền tạm tính: ${formattedVnd} (${formattedUsd})`
@@ -842,7 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ⚖️ Est. Weight: ${weight} kg
 🛵 Pickup Option: ${pickupTypeLabel}
 🏢 Hotel Address: ${hotelAddress}
-🚪 Room Number: ${roomNumber}
+${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
 ⏰ Preferred Pickup Time: ${pickupTime}
 💵 Payment Method: ${paymentMethod === 'cash' ? 'Cash' : 'Bank Transfer'}
 💵 Estimated Total: ${formattedVnd} (${formattedUsd})`;
@@ -884,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
           totalVnd: totalVnd,
           hotelAddress: hotelAddress,
           roomNumber: roomNumber ? roomNumber : 'Reception',
+          mapLink: mapLink,
           pickupTime: pickupTime,
           pickupMethod: pickupTypeLabel,
           separateWhites: service === 'shoes' ? (shoesExpressCheckbox && shoesExpressCheckbox.checked ? 'Express 24h' : 'No') : (whitesCheckbox && whitesCheckbox.checked ? 'Yes' : 'No'),
@@ -1489,14 +1492,15 @@ document.addEventListener('DOMContentLoaded', () => {
 2️⃣ <strong>Your name</strong>:<br>
 3️⃣ <strong>Address / Hotel Name</strong>:<br>
 4️⃣ <strong>Room number</strong>:<br>
-5️⃣ <strong>Preferred pickup option (Optional)</strong>: <em>(e.g., please leave your laundry at the reception for collection)</em><br>
-6️⃣ <strong>Do you have white clothes that should be washed separately?</strong> <em>(+30,000 VND)</em> 🧺<br>
-7️⃣ <strong>Your Phone/Zalo/WhatsApp Number</strong>:`,
+5️⃣ <strong>Google Maps Link (Optional)</strong>:<br>
+6️⃣ <strong>Preferred pickup option (Optional)</strong>: <em>(e.g., please leave your laundry at the reception for collection)</em><br>
+7️⃣ <strong>Do you have white clothes that should be washed separately?</strong> <em>(+30,000 VND)</em> 🧺<br>
+8️⃣ <strong>Your Phone/Zalo/WhatsApp Number</strong>:`,
       missingLabels: {
         time: '1️⃣ Your preferred pickup time',
         hotel: '3️⃣ Address / Hotel Name and/or 4️⃣ Room number',
-        whites: '6️⃣ Do you have white clothes that should be washed separately? (Yes/No)',
-        phone: '7️⃣ Your Phone/Zalo/WhatsApp Number'
+        whites: '7️⃣ Do you have white clothes that should be washed separately? (Yes/No)',
+        phone: '8️⃣ Your Phone/Zalo/WhatsApp Number'
       },
       missingIntro: "Thank you! I've received some details, but we are still missing a few pieces of information to complete your booking:<br><br>",
       missingOutro: "<br><br>Please reply with the missing details above!",
@@ -1774,14 +1778,15 @@ document.addEventListener('DOMContentLoaded', () => {
 2️⃣ <strong>Tên của bạn</strong>:<br>
 3️⃣ <strong>Địa chỉ / Tên khách sạn</strong>:<br>
 4️⃣ <strong>Số phòng</strong>:<br>
-5️⃣ <strong>Hình thức lấy đồ (Không bắt buộc)</strong>: <em>(ví dụ: gửi tại lễ tân khách sạn)</em><br>
-6️⃣ <strong>Bạn có đồ trắng cần giặt riêng không?</strong> <em>(+30,000 VND)</em> 🧺<br>
-7️⃣ <strong>Số điện thoại (Zalo/WhatsApp)</strong>:`,
+5️⃣ <strong>Link Google Maps (Không bắt buộc)</strong>:<br>
+6️⃣ <strong>Hình thức lấy đồ (Không bắt buộc)</strong>: <em>(ví dụ: gửi tại lễ tân khách sạn)</em><br>
+7️⃣ <strong>Bạn có đồ trắng cần giặt riêng không?</strong> <em>(+30,000 VND)</em> 🧺<br>
+8️⃣ <strong>Số điện thoại (Zalo/WhatsApp)</strong>:`,
       missingLabels: {
         time: '1️⃣ Thời gian lấy đồ mong muốn',
         hotel: '3️⃣ Địa chỉ / Tên khách sạn và/hoặc 4️⃣ Số phòng',
-        whites: '6️⃣ Bạn có đồ trắng cần giặt riêng không? (Có/Không)',
-        phone: '7️⃣ Số điện thoại (Zalo/WhatsApp)'
+        whites: '7️⃣ Bạn có đồ trắng cần giặt riêng không? (Có/Không)',
+        phone: '8️⃣ Số điện thoại (Zalo/WhatsApp)'
       },
       missingIntro: "Cảm ơn bạn! Tôi đã nhận được một số thông tin, nhưng vẫn còn thiếu vài thông tin sau để hoàn thành đặt lịch:<br><br>",
       missingOutro: "<br><br>Vui lòng bổ sung các thông tin còn thiếu ở trên nhé!",
@@ -2104,7 +2109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. Separate Whites: yes, no, separate, white, whit, color, có, không, tách, trắng
     const whitesPattern = /(yes|no|separate|white|whit|color|có|không|tách|trắng|dơ|màu)/i;
-    if (!whitesPattern.test(normalized) && !normalized.includes("6️⃣") && !normalized.includes("white clothes")) {
+    if (!whitesPattern.test(normalized) && !normalized.includes("6️⃣") && !normalized.includes("7️⃣") && !normalized.includes("white clothes")) {
       missing.push({
         id: 'whites',
         label: localScript.missingLabels.whites
@@ -2113,7 +2118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Phone Number check: check for a sequence of 9 to 11 digits
     const phonePattern = /(\b\d{9,11}\b|\+?\d{1,4}[-.\s]?\d{9,11})/i;
-    if (!phonePattern.test(normalized) && !normalized.includes("7️⃣") && !normalized.includes("phone") && !normalized.includes("sđt") && !normalized.includes("sdt")) {
+    if (!phonePattern.test(normalized) && !normalized.includes("7️⃣") && !normalized.includes("8️⃣") && !normalized.includes("phone") && !normalized.includes("sđt") && !normalized.includes("sdt")) {
       missing.push({
         id: 'phone',
         label: localScript.missingLabels.phone
@@ -2137,7 +2142,8 @@ document.addEventListener('DOMContentLoaded', () => {
                salesScript[bookingSession.lang].packages[bookingSession.data.packageId].title : 
                salesScript[bookingSession.lang].packages.sameday.title,
       whites: localScript.whitesNo,
-      phone: localScript.notProvided
+      phone: localScript.notProvided,
+      mapLink: ''
     };
 
     // 1. Extract Pickup Time
@@ -2189,6 +2195,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     result.phone = extractedPhone;
 
+    // Extract Google Maps Link
+    const mapLinkRegex = /(https?:\/\/(maps\.google\.com|www\.google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)\/[^\s]+)/i;
+    const mapLinkMatch = text.match(mapLinkRegex);
+    let extractedMapLink = '';
+    if (mapLinkMatch) {
+      extractedMapLink = mapLinkMatch[0];
+    }
+    result.mapLink = extractedMapLink;
+
     // 5. Subtract keywords and extract Room Number separately
     let hotelStr = text;
     if (timeMatch) hotelStr = hotelStr.replace(timeMatch[0], '');
@@ -2196,6 +2211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (whitesMatch) hotelStr = hotelStr.replace(whitesMatch[0], '');
     if (optionMatch) hotelStr = hotelStr.replace(optionMatch[0], '');
     if (phoneMatch) hotelStr = hotelStr.replace(phoneMatch[0], '');
+    if (mapLinkMatch) hotelStr = hotelStr.replace(mapLinkMatch[0], '');
 
     hotelStr = hotelStr.replace(/[-–,.]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -2247,6 +2263,31 @@ document.addEventListener('DOMContentLoaded', () => {
       bookingSession.lang = detectedLang;
     }
     const localScript = salesScript[bookingSession.lang];
+
+    // Check for cancel request
+    const normalizedText = (text || '').toLowerCase();
+    const isCancelRequest = chipId === 'cancel' || 
+                            normalizedText === 'cancel' || 
+                            normalizedText === 'hủy' || 
+                            normalizedText === 'huy' || 
+                            normalizedText.includes('hủy đặt lịch') ||
+                            normalizedText.includes('huy dat lich') ||
+                            normalizedText.includes('cancel booking');
+
+    if (isCancelRequest) {
+      bookingSession.active = false;
+      bookingSession.step = 0;
+      bookingSession.data = {
+        packageId: null,
+        packageName: '',
+        priceText: ''
+      };
+      bookingSession.userResponseText = '';
+      appendBotMessage(localScript.cancelGreeting);
+      showInitialMainMenu();
+      return;
+    }
+
     const step = bookingSession.step;
 
     if (step === 1) {
@@ -2308,7 +2349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         1️⃣ <strong>${localScript.confirmLabels.time}</strong>: ${parsed.time}<br>
         2️⃣ <strong>${localScript.confirmLabels.name}</strong>: ${parsed.name}<br>
         3️⃣ <strong>${localScript.confirmLabels.hotel}</strong>: ${parsed.hotel}<br>
-        4️⃣ <strong>${localScript.confirmLabels.room}</strong>: ${parsed.room}<br>
+        ${parsed.mapLink ? `📍 <strong>Google Maps Link</strong>: <a href="${parsed.mapLink}" target="_blank" style="color: var(--color-pink); word-break: break-all;">${parsed.mapLink}</a><br>` : ''}4️⃣ <strong>${localScript.confirmLabels.room}</strong>: ${parsed.room}<br>
         5️⃣ <strong>${localScript.confirmLabels.option}</strong>: ${parsed.option}<br>
         6️⃣ <strong>${localScript.confirmLabels.whites}</strong>: ${parsed.whites}<br>
         7️⃣ <strong>${localScript.confirmLabels.phone}</strong>: ${parsed.phone}<br>
@@ -2366,7 +2407,7 @@ Mã đơn hàng / Booking Code: #${bookingCode}
 1️⃣ ${localScript.confirmLabels.time}: ${parsed.time}
 2️⃣ ${localScript.confirmLabels.name}: ${parsed.name}
 3️⃣ ${localScript.confirmLabels.hotel}: ${parsed.hotel}
-4️⃣ ${localScript.confirmLabels.room}: ${parsed.room}
+${parsed.mapLink ? `📍 Google Maps: ${parsed.mapLink}\n` : ''}4️⃣ ${localScript.confirmLabels.room}: ${parsed.room}
 5️⃣ ${localScript.confirmLabels.option}: ${parsed.option}
 6️⃣ ${localScript.confirmLabels.whites}: ${parsed.whites}
 7️⃣ ${localScript.confirmLabels.phone}: ${parsed.phone}
@@ -2386,6 +2427,7 @@ Mã đơn hàng / Booking Code: #${bookingCode}
         email: '',
         hotelAddress: parsed.hotel,
         roomNumber: parsed.room,
+        mapLink: parsed.mapLink,
         service: parsed.service,
         totalVnd: totalVnd
       })

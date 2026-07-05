@@ -26,7 +26,7 @@ let sock = null;
 let isWaConnected = false;
 
 // --- TELEGRAM HELPER FUNCTIONS ---
-function sendTelegramMessage(chatId, text, replyToMessageId = null) {
+function sendTelegramMessage(chatId, text, replyToMessageId = null, replyMarkup = null) {
   const payload = {
     chat_id: chatId,
     text: text,
@@ -34,6 +34,9 @@ function sendTelegramMessage(chatId, text, replyToMessageId = null) {
   };
   if (replyToMessageId) {
     payload.reply_to_message_id = replyToMessageId;
+  }
+  if (replyMarkup) {
+    payload.reply_markup = replyMarkup;
   }
   
   const postData = JSON.stringify(payload);
