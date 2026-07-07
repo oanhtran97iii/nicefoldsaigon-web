@@ -2290,9 +2290,13 @@ Respond ONLY with a JSON object in this format:
       // 1. Intercept short greetings to show welcome message with buttons instantly
       if (!message.photo && text) {
         const cleanText = text.replace(/[^a-zA-Z0-9\/]/g, '').trim().toLowerCase();
-        const greetings = ['/start', 'hi', 'hello', 'chào', 'chao', 'hey', 'hola', 'start'];
-        if (greetings.includes(cleanText)) {
-          const welcomeText = `Dạ, chào anh/chị! 🧺 Em là Bé Hai - trợ lý của Nice Fold Saigon. Rất vui được gặp anh/chị ạ. Vui lòng chọn dịch vụ anh/chị cần:`;
+        const viGreetings = ['chào', 'chao', 'xin chào', 'xin chao'];
+        const enGreetings = ['/start', 'hi', 'hello', 'hey', 'hola', 'start'];
+        if (viGreetings.includes(cleanText) || enGreetings.includes(cleanText)) {
+          const isVi = viGreetings.includes(cleanText);
+          const welcomeText = isVi 
+            ? `Dạ, chào anh/chị! 🧺 Em là Bé Hai - trợ lý của Nice Fold Saigon. Rất vui được gặp anh/chị ạ. Vui lòng chọn dịch vụ anh/chị cần:`
+            : `Hello! 🧺 I'm Bé Hai - the assistant for Nice Fold Saigon. It's a pleasure to meet you. Please choose the service you need:`;
           const replyMarkup = {
             keyboard: [
               [{ text: 'Same-day Express' }],
@@ -2308,7 +2312,7 @@ Respond ONLY with a JSON object in this format:
 
         // 2. Intercept Change Package option
         if (text.toLowerCase().includes('change package') || text.includes('🔙 Change Package')) {
-          const welcomeText = `Dạ, vui lòng chọn dịch vụ anh/chị cần:`;
+          const welcomeText = `Please choose the service you need:`;
           const replyMarkup = {
             keyboard: [
               [{ text: 'Same-day Express' }],
@@ -2393,9 +2397,11 @@ Respond ONLY with a JSON object in this format:
         } else {
           const errText = await response.text();
           console.error('[Telegram Webhook] goClaw completions API error:', errText);
+          sendTelegramMessage(chatId, `❌ Hệ thống đang gặp sự cố kết nối với AI (goClaw). Vui lòng thử lại sau hoặc liên hệ Admin để kiểm tra.`, message.message_id);
         }
       } catch (err) {
         console.error('[Telegram Webhook] Fallback to goClaw failed:', err);
+        sendTelegramMessage(chatId, `❌ Đã xảy ra lỗi kết nối với hệ thống AI. Vui lòng liên hệ Admin.`, message.message_id);
       }
     }
   }
