@@ -1,16 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18164006468"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'AW-18164006468');
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- SEO Meta Tags -->
   <title>Book Your Laundry Appointment | Nice Fold Saigon</title>
   <meta name="description" content="Book your premium hotel laundry service in District 1 HCMC. Calculate your laundry price dynamically and send pre-filled booking details directly to our staff via WhatsApp or Zalo in under 2 minutes.">
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="logo.png">
+
   <!-- CSS Link -->
-  <link rel="stylesheet" href="index.css?v=12.0">
+  <link rel="stylesheet" href="index.css?v=14.0">
 
   <style>
+    /* Toggle Switch Styles */
+    .switch-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 15px;
+      width: 100%;
+      user-select: none;
+    }
+    .switch-input {
+      display: none;
+    }
+    .switch-label {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+      background-color: #ccc;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      flex-shrink: 0;
+      margin-bottom: 0 !important;
+    }
+    .switch-label::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .switch-input:checked + .switch-label {
+      background-color: #0b7eb4;
+    }
+    .switch-input:checked + .switch-label::after {
+      left: 26px;
+    }
+    .switch-text {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: var(--color-navy);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .switch-text a {
+      color: #0b7eb4;
+      text-decoration: underline;
+      font-weight: 700;
+    }
+    
     /* Checkout Modal Overlays */
     .modal-overlay {
       position: fixed;
@@ -383,7 +451,7 @@
       <nav class="nav-links" id="mainNav">
         <a href="./" class="nav-item">Home</a>
         <a href="./#pricing" class="nav-item">Pricing</a>
-        <a href="shoes.html" class="nav-item">Shoes Cleaning</a>
+        <!-- <a href="shoes.html" class="nav-item">Shoes Cleaning</a> -->
         <a href="bedding.html" class="nav-item">Linens & Bedding</a>
         <a href="booking.html" class="nav-item active">Book Appointment</a>
       </nav>
@@ -455,10 +523,13 @@
                   <option value="standard">Standard Wash & Fold (24h) - 40,000 VND / kg (Min 3kg)</option>
                   <option value="sameday" selected>Same-day Wash & Fold (8h-12h) - 50,000 VND / kg (Min 4kg)</option>
                   <option value="express">Express Wash & Fold (4h) - 70,000 VND / kg (Min 4kg)</option>
-                  <option value="shoes">Shoes Cleaning - From 150,000 VND / pair (Min 1 pair)</option>
-                  <option value="topper">Topper Cleaning - 60,000 VND / kg (Min 1kg)</option>
-                  <option value="curtain">Curtain Cleaning - 50,000 VND / kg (Min 1kg)</option>
-                  <option value="bedding">Beddings & Linens - 40,000 VND / kg (Min 3kg)</option>
+                  <!-- <option value="shoes">Shoes Cleaning - From 150,000 VND / pair (Min 1 pair)</option> -->
+                  <option value="topper_small">Topper Clean 1m2-1m4 (220,000 VND / pc)</option>
+                  <option value="topper_medium">Topper Clean 1m6-1m8 (270,000 VND / pc)</option>
+                  <option value="topper_large">Topper Clean 1m8-2m (290,000 VND / pc)</option>
+                  <option value="topper_xlarge">Topper Clean 2m-2m2 (370,000 VND / pc)</option>
+                  <option value="curtain">Curtain Cleaning - 60,000 VND / kg (Min 1kg)</option>
+                  <option value="bedding">Beddings & Linens - 60,000 VND / kg (Min 2kg)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -482,15 +553,34 @@
               </select>
             </div>
 
-            <!-- Row 6: Shipping Option (Full Width) -->
-            <div class="form-group">
-              <label for="booking-ship">Shipping Option *</label>
-              <select id="booking-ship" required>
-                <option value="roundtrip" selected>Round-trip Pickup & Delivery (50,000 VND)</option>
-                <option value="deliveryonly">Return Delivery Only (25,000 VND)</option>
-                <option value="pickuponly">Pickup Collection Only (25,000 VND)</option>
-                <option value="selfservice">Self Drop-off & self collection (0 VND)</option>
-              </select>
+            <!-- Row 6: Shipping Option & Distance (Double Column) -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="booking-ship">Shipping Option *</label>
+                <select id="booking-ship" required>
+                  <option value="roundtrip" selected>Round-trip Pickup & Delivery (50,000 VND) (within 4km)</option>
+                  <option value="deliveryonly">Return Delivery Only (25,000 VND) (within 4km)</option>
+                  <option value="pickuponly">Pickup Collection Only (25,000 VND) (within 4km)</option>
+                  <option value="selfservice">Self Drop-off & self collection (0 VND)</option>
+                </select>
+              </div>
+              <div class="form-group" id="distance-group">
+                <label for="booking-distance">Delivery Distance *</label>
+                <select id="booking-distance" required>
+                  <option value="4" selected>Within 4 km (Base Fee)</option>
+                  <option value="5">5 km (+10,000 VND)</option>
+                  <option value="6">6 km (+20,000 VND)</option>
+                  <option value="7">7 km (+30,000 VND)</option>
+                  <option value="8">8 km (+40,000 VND)</option>
+                  <option value="9">9 km (+50,000 VND)</option>
+                  <option value="10">10 km (+60,000 VND)</option>
+                  <option value="11">11 km (+70,000 VND)</option>
+                  <option value="12">12 km (+80,000 VND)</option>
+                  <option value="13">13 km (+90,000 VND)</option>
+                  <option value="14">14 km (+100,000 VND)</option>
+                  <option value="15">15 km (+110,000 VND)</option>
+                </select>
+              </div>
             </div>
 
             <!-- Row 7: Separate Whites checkbox (Full Width) -->
@@ -524,7 +614,7 @@
             <!-- Row 9: Google Maps Link (Single Column) -->
             <div class="form-row">
               <div class="form-group" style="width: 100%;">
-                <label for="booking-map-link">Google Maps Link (Highly recommended for faster delivery!)</label>
+                <label for="booking-map-link">Google Maps Link (Optional)</label>
                 <input type="url" id="booking-map-link" placeholder="e.g. https://maps.app.goo.gl/... (Paste maps link here)">
               </div>
             </div>
@@ -533,6 +623,31 @@
             <select id="booking-payment-method" style="display: none;">
               <option value="cash" selected></option>
             </select>
+
+            <!-- Booking Confirmation Toggles (Temporarily Commented Out)
+            <div class="form-toggles" style="margin-top: 1.5rem; width: 100%;">
+              <div class="switch-container">
+                <input type="checkbox" id="agree-terms" class="switch-input" required>
+                <label for="agree-terms" class="switch-label"></label>
+                <label for="agree-terms" class="switch-text">I agree to the <a href="terms.html" target="_blank">terms of service</a>.</label>
+              </div>
+              <div class="switch-container">
+                <input type="checkbox" id="agree-items" class="switch-input" required>
+                <label for="agree-items" class="switch-label"></label>
+                <label for="agree-items" class="switch-text">I agree to not send items that are in <a href="unaccepted-items.html" target="_blank">the list of items we cannot accept</a>.</label>
+              </div>
+              <div class="switch-container">
+                <input type="checkbox" id="agree-temp" class="switch-input" required>
+                <label for="agree-temp" class="switch-label"></label>
+                <label for="agree-temp" class="switch-text">I confirm that all items can be washed at 30°C and machine dried. I agree that Nice Fold will not be liable for any damage if I send items that cannot be washed this way.</label>
+              </div>
+              <div class="switch-container">
+                <input type="checkbox" id="agree-duvet" class="switch-input" required>
+                <label for="agree-duvet" class="switch-label"></label>
+                <label for="agree-duvet" class="switch-text">I understand that I cannot send duvets/comforters/blankets on the next-day service.</label>
+              </div>
+            </div>
+            -->
 
              <div class="form-buttons" style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem; width: 100%;">
                <button type="submit" id="submit-whatsapp" class="pill-button btn-whatsapp" style="display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 800; font-size: 1.02rem; padding: 14px 28px; border: none; background-color: #25d366; color: white; width: 100%; cursor: pointer; border-radius: 25px;">
@@ -577,7 +692,7 @@
                 <span id="calc-total-usd" class="total-usd">(~$10.00 USD)</span>
               </div>
             </div>
-            <p class="calculator-notice">* Minimum weights apply (Standard: 3kg | Same-day & Express: 4kg). Ship fee is 25,000 VND/way.</p>
+            <p class="calculator-notice">* Minimum weights apply (Standard: 3kg | Same-day & Express: 4kg). Ship fee is 25,000 VND/way (within 4km, +10k/km extra).</p>
           </div>
         </div>
 
@@ -602,9 +717,11 @@
           <ul>
             <li><a href="./">Home</a></li>
             <li><a href="./#pricing">Pricing packages</a></li>
-            <li><a href="shoes.html">Shoes Cleaning</a></li>
+            <!-- <li><a href="shoes.html">Shoes Cleaning</a></li> -->
             <li><a href="bedding.html">Linens & Bedding</a></li>
             <li><a href="booking.html">Book Appointment</a></li>
+            <!-- <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="unaccepted-items.html">Unaccepted Items</a></li> -->
           </ul>
         </div>
 
@@ -735,6 +852,6 @@
   </div>
 
   <!-- JavaScript Link -->
-  <script src="app.js?v=18.0"></script>
+  <script src="app.js?v=19.0"></script>
 </body>
 </html>

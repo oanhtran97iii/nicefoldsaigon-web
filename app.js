@@ -1,4 +1,47 @@
+// --- Google Ads Conversion Tracking Helper ---
+window.reportGoogleAdsConversion = function(conversionId, fallbackAction) {
+  let callbackCalled = false;
+  const executeFallback = () => {
+    if (!callbackCalled) {
+      callbackCalled = true;
+      fallbackAction();
+    }
+  };
+  
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'conversion', {
+      'send_to': conversionId,
+      'event_callback': executeFallback
+    });
+    // Safety timeout of 800ms to ensure the action proceeds even if Google's server is blocked/slow
+    setTimeout(executeFallback, 800);
+  } else {
+    executeFallback();
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  // --- GOOGLE ADS LINK CLICK TRACKING ---
+  // 1. Phone Clicks
+  document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      window.reportGoogleAdsConversion('AW-18164006468/g3-bCPLJmNIcEMT8otVD', () => {
+        window.location.href = el.href;
+      });
+    });
+  });
+
+  // 2. WhatsApp & Zalo Clicks
+  document.querySelectorAll('a[href*="wa.me"], a[href*="zalo.me"]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+        window.open(el.href, '_blank');
+      });
+    });
+  });
+
   // Config
   const EXCHANGE_RATE = 25000; // 1 USD = 25,000 VND
   const WHATSAPP_PHONE = '84373991602';
@@ -26,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // index.html Pricing Section
     "Pricing Packs": "Các gói dịch vụ",
     "Our Signature Services": "Dịch vụ giặt sấy cao cấp",
-    "🛵 All packages include round-trip pickup & delivery! (Deduct 25k/way if self drop-off/collect)": "🛵 Tất cả các gói đã bao gồm giao nhận tận nơi khứ hồi! (Trừ 25k/chiều nếu tự mang tới/lấy)",
+    "🛵 All packages include round-trip pickup & delivery within 4km! (Over 4km: +10,000 VND/km. Deduct 25k/way if self drop-off/collect)": "🛵 Tất cả các gói đã bao gồm giao nhận tận nơi khứ hồi trong bán kính 4km! (Trên 4km phụ thu 10.000 VND/km. Trừ 25k/chiều nếu tự mang tới/lấy)",
     "24-hour standard": "Tiêu chuẩn 24h",
     "VND / 3kg base": "VND / Tối thiểu 3kg",
     "40,000 VND/kg extra | Includes 2-way Delivery (~$6.80 USD)": "40.000 VND/kg tiếp theo | Đã gồm giao nhận 2 chiều (~$6.80 USD)",
@@ -72,6 +115,53 @@ document.addEventListener('DOMContentLoaded', () => {
     "Sheets, Duvets, Blankets": "Drap giường, Mền, Chăn",
     "Separate high-temperature wash with premium softeners. Soft, fluffy, and clean sheets guaranteed.": "Giặt riêng ở nhiệt độ cao với nước xả vải cao cấp. Cam kết chăn drap mềm mại và sạch khuẩn.",
 
+    // How It Works / Process Section
+    "How It Works": "Quy trình hoạt động",
+    "Pure Convenience in 4 Simple Steps": "Tiện lợi tuyệt đối trong 4 bước đơn giản",
+    "We coordinate directly with your hotel desk so you can enjoy your vacation uninterrupted.": "Chúng tôi phối hợp trực tiếp với quầy lễ tân khách sạn để bạn có thể tận hưởng kỳ nghỉ của mình một cách trọn vẹn.",
+    "1 Min": "1 phút",
+    "Book Online": "Đặt lịch trực tuyến",
+    "Calculate your price and book via our WhatsApp or Zalo form in under a minute.": "Tính giá và đặt lịch qua biểu mẫu WhatsApp hoặc Zalo của chúng tôi chưa đầy một phút.",
+    "10 Mins": "10 phút",
+    "Drop at Reception": "Gửi tại lễ tân",
+    "Leave your laundry bag with hotel reception. Our driver will collect it shortly.": "Để túi đồ giặt của bạn tại quầy lễ tân. Tài xế của chúng tôi sẽ đến thu gom ngay.",
+    "Separate": "Giặt riêng",
+    "Separate Washing": "Giặt riêng biệt",
+    "Your laundry is washed individually in dedicated machines using eco-detergents.": "Đồ giặt của bạn được giặt riêng lẻ trong các máy giặt chuyên dụng bằng bột giặt thân thiện với môi trường.",
+    "Delivery": "Giao nhận",
+    "Hotel Desk Return": "Trả tại lễ tân khách sạn",
+    "We deliver clean, perfectly folded, smelling fresh clothes back to your hotel receptionist.": "Chúng tôi giao quần áo sạch sẽ, được xếp gọn gàng, thơm tho trở lại quầy lễ tân khách sạn của bạn.",
+
+    // Why Choose Us Section
+    "Why Choose Us": "Tại sao chọn chúng tôi",
+    "Why travelers trust Nice Fold Saigon": "Tại sao du khách tin tưởng Nice Fold Saigon",
+    "We focus on hygiene, honesty, and pure convenience so you can enjoy HCMC worry-free.": "Chúng tôi tập trung vào vệ sinh, trung thực và sự tiện lợi tuyệt đối để bạn có thể tận hưởng TP.HCM mà không phải lo lắng.",
+    "Hygiene": "Vệ sinh",
+    "100% Separate Wash": "Giặt riêng biệt 100%",
+    "Each guest gets their own washing & drying machines. We never mix your clothes with others.": "Mỗi khách hàng được giặt sấy bằng máy độc lập. Cam kết tuyệt đối không giặt chung đồ với người khác.",
+    "Speeds": "Tốc độ",
+    "Express Delivery": "Giao hàng hỏa tốc",
+    "Get your clothes back in as little as 4 hours, or select same-day laundry returned by dinner.": "Nhận lại quần áo sạch chỉ sau 4 tiếng, hoặc chọn gói trong ngày giao trước bữa tối.",
+    "Honest": "Trung thực",
+    "Transparent Pricing": "Giá cả minh bạch",
+    "Calculate the exact cost online beforehand. We charge exactly what is estimated—no tourist scams.": "Tính toán chi phí chính xác trực tuyến trước khi đặt. Chúng tôi tính phí đúng như báo giá—không lo chèo kéo khách du lịch.",
+    "Easy": "Tiện lợi",
+    "Hotel Front Desk Collection": "Giao nhận tại lễ tân khách sạn",
+    "Just leave your bag at the front desk. We collect and deliver it back to the receptionist—no waiting around.": "Chỉ cần gửi túi đồ tại quầy lễ tân. Chúng tôi sẽ đến lấy và giao trả tận nơi cho lễ tân—không mất thời gian chờ đợi.",
+
+    // Team Section
+    "Our Crew": "Đội ngũ của chúng tôi",
+    "Meet Our Saigon Laundry Crew": "Đội ngũ giặt ủi tại Sài Gòn của chúng tôi",
+    "The hard-working local experts keeping your clothes fresh, clean, and perfectly folded.": "Những chuyên gia địa phương làm việc chăm chỉ để giữ cho quần áo của bạn luôn sạch thơm và được gấp xếp gọn gàng.",
+    "Book your pickup now!": "Đặt lịch lấy đồ ngay!",
+
+    // Split Cards
+    "Mattress Toppers": "Tấm bảo vệ nệm Topper",
+    "Specialist deep cleaning for mattress toppers (24h turnaround).": "Làm sạch sâu chuyên nghiệp cho tấm topper bảo vệ nệm (nhận trả trong 24h).",
+    "Curtains": "Rèm cửa",
+    "Specialist deep cleaning for curtains.": "Làm sạch sâu chuyên biệt cho rèm cửa.",
+    "60.000 VND / kg": "60.000 VND / kg",
+
     // booking.html (Calculator)
     "Price Calculator": "Công cụ tính giá",
     "Calculate & Pre-Fill Your Booking": "Tính giá & Điền thông tin đặt lịch",
@@ -82,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "White Clothes Surcharge:": "Phụ phí giặt đồ trắng:",
     "Shipping Fee:": "Phí vận chuyển giao nhận:",
     "Estimated Total:": "Tổng chi phí ước tính:",
-    "* Minimum weights apply (Standard: 3kg | Same-day & Express: 4kg). Ship fee is 25,000 VND/way.": "* Áp dụng khối lượng tối thiểu (Standard: 3kg | Same-day & Express: 4kg). Phí ship là 25.000 VND/chiều.",
+    "* Minimum weights apply (Standard: 3kg | Same-day & Express: 4kg). Ship fee is 25,000 VND/way (within 4km, +10k/km extra).": "* Áp dụng khối lượng tối thiểu (Standard: 3kg | Same-day & Express: 4kg). Phí ship là 25.000 VND/chiều (trong phạm vi 4km, trên 4km phụ thu 10.000 VND/km).",
     
     // booking.html (Form)
     "Quick Booking": "Đặt lịch nhanh",
@@ -97,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "Express 24h Shoes (+100,000 VND/pair)": "Giặt giày hỏa tốc 24h (+100.000 VND/đôi)",
     "Hotel Name & Address *": "Tên khách sạn & Địa chỉ *",
     "Room Number": "Số phòng",
+    "Google Maps Link (Optional)": "Đường dẫn Google Maps (Không bắt buộc)",
     "💬 Send Pickup Order via WhatsApp": "💬 Gửi thông tin đặt lịch qua WhatsApp",
     "💬 Send Pickup Order via Zalo": "💬 Gửi thông tin đặt lịch qua Zalo",
 
@@ -105,14 +196,30 @@ document.addEventListener('DOMContentLoaded', () => {
     "Same-day Wash & Fold (8h-12h) - 50,000 VND / kg (Min 4kg)": "Giặt sấy lấy trong ngày (8h-12h) - 50.000 VND / kg (Tối thiểu 4kg)",
     "Express Wash & Fold (4h) - 70,000 VND / kg (Min 4kg)": "Giặt sấy hỏa tốc (4h) - 70.000 VND / kg (Tối thiểu 4kg)",
     "Shoes Cleaning - From 150,000 VND / pair (Min 1 pair)": "Vệ sinh giày - Từ 150.000 VND / đôi (Tối thiểu 1 đôi)",
-    "Topper Cleaning - 60,000 VND / kg (Min 1kg)": "Giặt topper - 60.000 VND / kg (Tối thiểu 1kg)",
-    "Curtain Cleaning - 50,000 VND / kg (Min 1kg)": "Giặt rèm cửa - 50.000 VND / kg (Tối thiểu 1kg)",
-    "Beddings & Linens - 40,000 VND / kg (Min 3kg)": "Giặt chăn ga gối nệm - 40.000 VND / kg (Tối thiểu 3kg)",
+    "Topper Clean 1m2-1m4 (220,000 VND / pc)": "Giặt Topper 1m2 - 1m4 (220.000 VND / cái)",
+    "Topper Clean 1m6-1m8 (270,000 VND / pc)": "Giặt Topper 1m6 - 1m8 (270.000 VND / cái)",
+    "Topper Clean 1m8-2m (290,000 VND / pc)": "Giặt Topper 1m8 - 2m (290.000 VND / cái)",
+    "Topper Clean 2m-2m2 (370,000 VND / pc)": "Giặt Topper 2m - 2m2 (370.000 VND / cái)",
+    "Curtain Cleaning - 60,000 VND / kg (Min 1kg)": "Giặt rèm cửa - 60.000 VND / kg (Tối thiểu 1kg)",
+    "Beddings & Linens - 60,000 VND / kg (Min 2kg)": "Giặt chăn ga gối nệm - 60.000 VND / kg (Tối thiểu 2kg)",
 
-    "Round-trip Pickup & Delivery (50,000 VND)": "Giao nhận khứ hồi tận nơi (50.000 VND)",
-    "Return Delivery Only (25,000 VND)": "Chỉ giao đồ đã giặt về (25.000 VND)",
-    "Pickup Collection Only (25,000 VND)": "Chỉ đến lấy đồ đi giặt (25.000 VND)",
+    "Round-trip Pickup & Delivery (50,000 VND) (within 4km)": "Giao nhận khứ hồi tận nơi (50.000 VND) (trong 4km)",
+    "Return Delivery Only (25,000 VND) (within 4km)": "Chỉ giao đồ đã giặt về (25.000 VND) (trong 4km)",
+    "Pickup Collection Only (25,000 VND) (within 4km)": "Chỉ đến lấy đồ đi giặt (25.000 VND) (trong 4km)",
     "Self Drop-off & self collection (0 VND)": "Tự mang tới tiệm và tự lấy (0 VND)",
+    "Delivery Distance *": "Khoảng cách giao nhận *",
+    "Within 4 km (Base Fee)": "Trong phạm vi 4 km (Phí cơ bản)",
+    "5 km (+10,000 VND)": "5 km (+10.000 VND)",
+    "6 km (+20,000 VND)": "6 km (+20.000 VND)",
+    "7 km (+30,000 VND)": "7 km (+30.000 VND)",
+    "8 km (+40,000 VND)": "8 km (+40.000 VND)",
+    "9 km (+50,000 VND)": "9 km (+50.000 VND)",
+    "10 km (+60,000 VND)": "10 km (+60.000 VND)",
+    "11 km (+70,000 VND)": "11 km (+70.000 VND)",
+    "12 km (+80,000 VND)": "12 km (+80.000 VND)",
+    "13 km (+90,000 VND)": "13 km (+90.000 VND)",
+    "14 km (+100,000 VND)": "14 km (+100.000 VND)",
+    "15 km (+110,000 VND)": "15 km (+110.000 VND)",
 
     // Placeholders
     "e.g. John Doe": "Ví dụ: Nguyễn Văn A",
@@ -120,6 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
     "e.g. Today 4:00 PM": "Ví dụ: Hôm nay 16:00",
     "e.g. Caravelle Hotel, 19 Lam Son Square, District 1": "Ví dụ: Khách sạn Caravelle, 19 Công trường Lam Sơn, Quận 1",
     "e.g. Room 502 (or leave at front desk)": "Ví dụ: Phòng 502 (hoặc gửi tại quầy lễ tân)",
+
+    // Agreement Switches
+    "I agree to the": "Tôi đồng ý với",
+    "terms of service": "điều khoản dịch vụ",
+    "I agree to not send items that are in": "Tôi đồng ý không gửi các mặt hàng nằm trong",
+    "the list of items we cannot accept": "danh sách các sản phẩm không được chấp nhận",
+    "I confirm that all items can be washed at 30°C and machine dried. I agree that Nice Fold will not be liable for any damage if I send items that cannot be washed this way.": "Tôi xác nhận rằng tất cả đồ giặt có thể giặt ở nhiệt độ 30°C và sấy bằng máy. Tôi đồng ý rằng Nice Fold sẽ không chịu trách nhiệm cho bất kỳ hư hỏng nào nếu tôi gửi đồ không thể giặt sấy theo cách này.",
+    "I understand that I cannot send duvets/comforters/blankets on the next-day service.": "Tôi hiểu rằng tôi không thể gửi ruột mền/chăn bông/mền dày trong gói dịch vụ giặt sấy thông thường trả ngày hôm sau.",
 
     // shoes.html
     "Premium Shoes Care": "Chăm sóc giày cao cấp",
@@ -253,14 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
     "More Detail": "Chi tiết",
     "Toppers & Curtains": "Topper & Rèm cửa",
     "Specialist deep cleaning for mattress toppers (24h turnaround) and curtains.": "Làm sạch sâu chuyên biệt cho tấm bảo vệ nệm topper (giao nhận 24h) và rèm cửa.",
-    "Topper: 60.000 VND / kg": "Topper: 60.000 VND / kg",
-    "Curtain: 50.000 VND / kg": "Rèm cửa: 50.000 VND / kg",
+    "Topper: From 220,000 VND": "Topper: Từ 220.000 VND",
+    "From 220.000 VND": "Từ 220.000 VND",
+    "Curtain: 60,000 VND / kg": "Rèm cửa: 60.000 VND / kg",
     "Premium Linens, Bedding & Mattress Topper Cleaning Saigon | Nice Fold Saigon": "Dịch vụ giặt sấy cao cấp Drap, Chăn ga & Topper Sài Gòn | Nice Fold Saigon",
     "Premium Bedding Care": "Chăm sóc Chăn ga Cao cấp",
     "Hygienic Cleaning for Linens & Bedding": "Giặt sấy Vệ sinh Chăn ga & Gối đệm",
     "Keep your bedroom fresh and allergen-free. We provide professional deep cleaning for bedsheets, heavy duvets, mattress toppers, and curtains. 100% separate washes and complete machine drying guaranteed.": "Giữ phòng ngủ luôn sạch mát và không còn tác nhân gây dị ứng. Chúng tôi cung cấp dịch vụ làm sạch sâu chuyên nghiệp cho drap trải giường, chăn bông dày, tấm bảo vệ nệm topper và rèm cửa. Cam kết giặt riêng 100% và sấy khô hoàn toàn bằng máy.",
     "Delivery:": "Giao nhận:",
-    "50,000 VND round-trip (Free if self drop-off/collect)": "50.000 VND khứ hồi (Miễn phí nếu tự mang tới/lấy đồ)",
+    "50,000 VND round-trip within 4km (Over 4km: +10,000 VND/km. Free if self drop-off/collect)": "50.000 VND khứ hồi trong bán kính 4km (Trên 4km phụ thu 10.000 VND/km. Miễn phí nếu tự mang tới/lấy đồ)",
     "Stain treatment:": "Tẩy vết bẩn:",
     "Charged separately per item (see details below)": "Tính phí riêng biệt theo từng món (xem chi tiết bên dưới)",
     "Optional Add-on": "Tùy chọn thêm",
@@ -290,36 +406,40 @@ document.addEventListener('DOMContentLoaded', () => {
     "Flat-Rate Bedding & Linens Services": "Bảng giá Giặt sấy Chăn ga & Gối đệm",
     "Simple weight-based pricing for all bedding items. Returned fresh and dry in 24-36 hours.": "Giá tính theo số ký đơn giản cho tất cả đồ giường. Giao trả sạch thơm và khô ráo trong vòng 24-36 giờ.",
     "Bedsheets & Linens": "Drap giường & Chăn ga",
-    "Minimum order: 3kg (~$1.60 USD/kg)": "Tối thiểu: 3kg (~1.60 USD/kg)",
-    "Best for bedsheets, pillow covers, duvet covers, bath towels, and light blankets. Washed, dried, and neatly folded.": "Phù hợp nhất cho drap giường, vỏ gối, vỏ chăn, khăn tắm và chăn mỏng. Được giặt sạch, sấy khô và gấp gọn gàng.",
+    "Minimum order: 2kg (~$2.40 USD/kg)": "Tối thiểu: 2kg (~2.40 USD/kg)",
+    "Best for bedsheets, pillow covers, duvet covers, and bath towels (thin fabric items only, excludes duvets and thick blankets). Washed, dried, and neatly folded.": "Phù hợp nhất cho drap giường, vỏ gối, vỏ mền và khăn tắm (chỉ áp dụng cho đồ vải mỏng, không nhận ruột mền dày và chăn bông). Được giặt sạch, sấy khô và gấp gọn gàng.",
     "Mattress Toppers": "Tấm bảo vệ nệm Topper",
-    "Minimum order: 1kg (~$2.40 USD/kg)": "Tối thiểu: 1kg (~2.40 USD/kg)",
+    "Deep cleaning & complete machine dry": "Làm sạch sâu & sấy khô hoàn toàn bằng máy",
     "Deep cleaning and sanitizing for mattress protectors and toppers of all sizes. Assured complete deep drying to prevent internal mildew.": "Làm sạch sâu và khử trùng cho tấm bảo vệ nệm và topper mọi kích thước. Đảm bảo sấy khô hoàn toàn bên trong để ngăn ngừa ẩm mốc.",
-    "Curtains & Drapes": "Rèm cửa & Màn cửa",
-    "Minimum order: 1kg (~$2.00 USD/kg)": "Tối thiểu: 1kg (~2.00 USD/kg)",
-    "Specialist washing for household or homestay curtains. Removes dust, odors, and environmental allergens safely.": "Giặt chuyên nghiệp cho rèm cửa hộ gia đình hoặc homestay. Loại bỏ bụi bẩn, mùi hôi và các tác nhân gây dị ứng một cách an toàn.",
+    "Curtains & Carpets": "Rèm cửa & Thảm trải sàn",
+    "Minimum order: 1kg (~$2.40 USD/kg)": "Tối thiểu: 1kg (~2.40 USD/kg)",
+    "Specialist washing for household curtains, drapes, and area carpets. Removes dust, odors, and environmental allergens safely.": "Giặt chuyên nghiệp cho rèm cửa và thảm trải sàn. Loại bỏ bụi bẩn, mùi hôi và các tác nhân gây dị ứng một cách an toàn.",
     "Ready for Fresh Bedding?": "Bạn đã sẵn sàng cho một chiếc giường sạch thơm?",
     "Schedule a pickup appointment for your linens, sheets, or toppers today. Free round-trip collection directly at your lobby.": "Đặt lịch lấy chăn drap, vỏ ga hoặc topper của bạn ngay hôm nay. Giao nhận hai chiều miễn phí trực tiếp tại sảnh.",
     "Book Bedding Cleaning Now": "Đặt lịch giặt Chăn ga ngay",
     "Linens & Bedding": "Drap & Chăn ga",
     "Sanitization": "Khử khuẩn",
     "Select Service": "Chọn dịch vụ",
-    "Topper: 60k | Curtain: 50k / kg": "Topper: 60k | Rèm cửa: 50k / kg",
+    "Topper: From 229k | Curtain: 60k/kg": "Topper: Từ 229k | Rèm cửa: 60k/kg",
     "Delivery:": "Giao nhận:",
-    "50,000 VND round-trip (Free if self drop-off/collect)": "50.000 VND khứ hồi (Miễn phí nếu tự mang tới/lấy đồ)",
+    "50,000 VND round-trip within 4km (Over 4km: +10,000 VND/km. Free if self drop-off/collect)": "50.000 VND khứ hồi trong bán kính 4km (Trên 4km phụ thu 10.000 VND/km. Miễn phí nếu tự mang tới/lấy đồ)",
     "Stain treatment:": "Tẩy vết bẩn:",
     "Charged separately per item (see details below)": "Tính phí riêng biệt theo từng món (xem chi tiết bên dưới)",
     "Optional Add-on": "Tùy chọn thêm",
     "Stain & Yellowing Removal": "Tẩy bẩn & Tẩy ố vàng",
     "Professional treatment for blood stains, yellowing, sweat discoloration, or stubborn spills.": "Xử lý chuyên nghiệp cho vết máu, ố vàng, ố mồ hôi hoặc vết tràn cứng đầu.",
-    "Pillowcase": "Bao gối",
+    "Stain Whitening - Level 1": "Tẩy trắng ố mốc - Cấp 1",
+    "For light stains or mild yellowing on fabrics.": "Dành cho vết ố mờ, vết bẩn nhẹ mới phát sinh.",
+    "Stain Whitening - Level 2": "Tẩy trắng ố mốc - Cấp 2",
+    "For severe mildew, aged yellowing, or color bleeding.": "Dành cho vết mốc đen nặng, vết ố bám lâu ngày hoặc loang màu.",
+    "By Size": "Theo kích thước",
+    "From 220k VND": "Từ 220.000đ",
+    "Size 1m2 - 1m4:": "Kích thước 1m2 - 1m4:",
+    "Size 1m6 - 1m8:": "Kích thước 1m6 - 1m8:",
+    "Size 1m8 - 2m:": "Kích thước 1m8 - 2m:",
+    "Size 2m - 2m2:": "Kích thước 2m - 2m2:",
+    "Book Topper Cleaning": "Đặt lịch giặt Topper",
     "/ pc": "/ cái",
-    "Bedsheet or Duvet Cover": "Drap hoặc Mền",
-    "Pillow or Cushion": "Gối hoặc Đệm ngồi",
-    "Mattress Topper": "Topper",
-    "Curtains & Drapes": "Màn rèm",
-    "(White Curtains Only)": "(Chỉ rèm trắng)",
-    "/ item": "/ món",
     "* Note: Extremely aged stains or heat-set discolorations might not be 100% restorable. We always inspect and advise beforehand.": "* Lưu ý: Các vết bẩn quá lâu ngày hoặc vết ố đã bám sâu vào sợi vải có thể không thể phục hồi 100%. Chúng tôi sẽ luôn kiểm tra và tư vấn trước cho bạn.",
     "Payment Option *": "Phương thức thanh toán *",
     "Bank transfer (Vietnamese bank only)": "Chuyển khoản (Chỉ ngân hàng VN)",
@@ -431,9 +551,12 @@ document.addEventListener('DOMContentLoaded', () => {
     sameday: { price: 50000, minWeight: 4, label: 'Same-day Wash & Fold (8h-12h)', unit: 'kg' },
     express: { price: 70000, minWeight: 4, label: 'Express Wash & Fold (4h)', unit: 'kg' },
     shoes: { price: 150000, minWeight: 1, label: 'Shoes Cleaning', unit: 'pair', isPerItem: true },
-    topper: { price: 60000, minWeight: 1, label: 'Topper Cleaning', unit: 'kg' },
-    curtain: { price: 50000, minWeight: 1, label: 'Curtain Cleaning', unit: 'kg' },
-    bedding: { price: 40000, minWeight: 3, label: 'Beddings & Linens', unit: 'kg' }
+    topper_small: { price: 220000, minWeight: 1, label: 'Topper Clean 1m2-1m4', unit: 'piece', isPerItem: true },
+    topper_medium: { price: 270000, minWeight: 1, label: 'Topper Clean 1m6-1m8', unit: 'piece', isPerItem: true },
+    topper_large: { price: 290000, minWeight: 1, label: 'Topper Clean 1m8-2m', unit: 'piece', isPerItem: true },
+    topper_xlarge: { price: 370000, minWeight: 1, label: 'Topper Clean 2m-2m2', unit: 'piece', isPerItem: true },
+    curtain: { price: 60000, minWeight: 1, label: 'Curtain Cleaning', unit: 'kg' },
+    bedding: { price: 60000, minWeight: 2, label: 'Beddings & Linens', unit: 'kg' }
   };
 
   // Calculator Elements
@@ -553,10 +676,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Calculate ship fee
     let shipFeeVnd = 50000;
+    let distanceSurcharge = 0;
+    const distanceSelect = document.getElementById('booking-distance');
+    const distanceGroup = document.getElementById('distance-group');
+    if (distanceSelect) {
+      if (shipSelect && shipSelect.value === 'selfservice') {
+        if (distanceGroup) distanceGroup.style.display = 'none';
+        distanceSelect.value = '4';
+      } else {
+        if (distanceGroup) distanceGroup.style.display = 'flex';
+        const distanceVal = parseInt(distanceSelect.value) || 4;
+        if (distanceVal > 4) {
+          distanceSurcharge = (distanceVal - 4) * 10000;
+        }
+      }
+    }
     if (shipSelect) {
       const shipOption = shipSelect.value;
-      if (shipOption === 'roundtrip') shipFeeVnd = 50000;
-      else if (shipOption === 'deliveryonly' || shipOption === 'pickuponly') shipFeeVnd = 25000;
+      if (shipOption === 'roundtrip') shipFeeVnd = 50000 + distanceSurcharge;
+      else if (shipOption === 'deliveryonly' || shipOption === 'pickuponly') shipFeeVnd = 25000 + distanceSurcharge;
       else if (shipOption === 'selfservice') shipFeeVnd = 0;
     }
 
@@ -621,7 +759,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // URL Parameter Handling for Multi-page redirection pre-fill
   const urlParams = new URLSearchParams(window.location.search);
-  const serviceParam = urlParams.get('service');
+  let serviceParam = urlParams.get('service');
+  if (serviceParam === 'topper') {
+    serviceParam = 'topper_medium';
+  }
   if (serviceParam && RATES[serviceParam]) {
     if (serviceSelect) {
       serviceSelect.value = serviceParam;
@@ -656,6 +797,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (shipSelect) shipSelect.addEventListener('change', updateCalculator);
+    const distanceSelect = document.getElementById('booking-distance');
+    if (distanceSelect) distanceSelect.addEventListener('change', updateCalculator);
     if (whitesCheckbox) whitesCheckbox.addEventListener('change', updateCalculator);
     if (shoesExpressCheckbox) shoesExpressCheckbox.addEventListener('change', updateCalculator);
   }
@@ -758,22 +901,38 @@ document.addEventListener('DOMContentLoaded', () => {
       const laundryTotalVnd = weight * rateConfig.price;
 
       // Calculate ship fee
+      const isVi = (localStorage.getItem('site_lang') || 'en') === 'vi';
       let shipFeeVnd = 50000;
-      let shipLabel = 'Round-trip Pickup & Delivery';
+      let distanceSurcharge = 0;
+      const distanceSelect = document.getElementById('booking-distance');
+      const distanceVal = distanceSelect ? parseInt(distanceSelect.value) : 4;
+      if (distanceSelect && shipSelect && shipSelect.value !== 'selfservice') {
+        if (distanceVal > 4) {
+          distanceSurcharge = (distanceVal - 4) * 10000;
+        }
+      }
+      
+      let shipLabel = '';
       if (shipSelect) {
         const shipOption = shipSelect.value;
         if (shipOption === 'roundtrip') {
-          shipFeeVnd = 50000;
-          shipLabel = 'Round-trip Pickup & Delivery';
+          shipFeeVnd = 50000 + distanceSurcharge;
+          shipLabel = isVi 
+            ? `Giao nhận khứ hồi (Khoảng cách: ${distanceVal}km${distanceVal > 4 ? `, phụ phí trên 4km: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`
+            : `Round-trip Pickup & Delivery (Distance: ${distanceVal}km${distanceVal > 4 ? `, over 4km fee: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`;
         } else if (shipOption === 'deliveryonly') {
-          shipFeeVnd = 25000;
-          shipLabel = 'Return Delivery Only';
+          shipFeeVnd = 25000 + distanceSurcharge;
+          shipLabel = isVi 
+            ? `Chỉ giao đồ về (Khoảng cách: ${distanceVal}km${distanceVal > 4 ? `, phụ phí trên 4km: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`
+            : `Return Delivery Only (Distance: ${distanceVal}km${distanceVal > 4 ? `, over 4km fee: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`;
         } else if (shipOption === 'pickuponly') {
-          shipFeeVnd = 25000;
-          shipLabel = 'Pickup Collection Only';
+          shipFeeVnd = 25000 + distanceSurcharge;
+          shipLabel = isVi 
+            ? `Chỉ đến lấy đồ đi (Khoảng cách: ${distanceVal}km${distanceVal > 4 ? `, phụ phí trên 4km: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`
+            : `Pickup Collection Only (Distance: ${distanceVal}km${distanceVal > 4 ? `, over 4km fee: +${distanceSurcharge.toLocaleString('vi-VN')} VND` : ''})`;
         } else if (shipOption === 'selfservice') {
           shipFeeVnd = 0;
-          shipLabel = 'Self Drop-off & Self Collection';
+          shipLabel = isVi ? 'Tự mang tới & tự lấy' : 'Self Drop-off & Self Collection';
         }
       }
 
@@ -853,7 +1012,9 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
 
         if (activeBtnId === 'submit-whatsapp') {
           const waLink = "https://wa.me/84373991602?text=" + encodeURIComponent(messageText);
-          window.open(waLink, '_blank');
+          window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+            window.open(waLink, '_blank');
+          });
         } else {
           // Zalo flow: copy to clipboard and open Zalo URL
           navigator.clipboard.writeText(messageText).then(() => {
@@ -861,9 +1022,13 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
               '📝 Thông tin đặt lịch đã được sao chép vào bộ nhớ tạm!\n\nĐang mở Zalo. Vui lòng dán (paste) nội dung đã sao chép vào khung chat Zalo với chúng tôi để gửi thông tin đặt lịch.' :
               '📝 Booking details copied to clipboard!\n\nOpening Zalo. Please paste the copied details into our Zalo chat to complete your booking.'
             );
-            window.open('https://zalo.me/0373991602', '_blank');
+            window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+              window.open('https://zalo.me/0373991602', '_blank');
+            });
           }).catch(() => {
-            window.open('https://zalo.me/0373991602', '_blank');
+            window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+              window.open('https://zalo.me/0373991602', '_blank');
+            });
           });
         }
       };
@@ -1270,7 +1435,7 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
         },
         other: {
           title: "Other Services",
-          details: "<strong>Other Premium Cleaning Services</strong>:<br>• <strong>Shoes Cleaning</strong>: Deep clean by hand (Sneakers & Canvas: 150,000 VND / pair | Premium Leather & Suede: 220,000 VND / pair. Express 24h: +100,000 VND / pair. Delivery fee: 50,000 VND round-trip).<br>• <strong>Mattress Toppers</strong>: 60,000 VND / kg (24h turnaround).<br>• <strong>Curtains</strong>: 50,000 VND / kg.<br>• <strong>Beddings & Linens</strong>: 40,000 VND / kg (3kg min)."
+          details: "<strong>Other Premium Cleaning Services</strong>:<br>• <strong>Mattress Toppers</strong>: 60,000 VND / kg (24h turnaround).<br>• <strong>Curtains</strong>: 50,000 VND / kg.<br>• <strong>Beddings & Linens</strong>: 40,000 VND / kg (3kg min)."
         }
       },
       questions: [
@@ -1320,7 +1485,7 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
           id: "compensation_query",
           short: "🛡️ Loss & Damage Policy",
           keywords: ["compensation", "lost", "lose", "damage", "damaged", "ruined", "mất đồ", "mat do", "hỏng đồ", "hong do", "đền"],
-          response: "💝 <strong>Nice Fold Cares for Your Clothes:</strong><br>• To ensure the highest level of care, we specialize in standard Wash & Fold and hand-wash shoes. Please review our <strong>⚠️ Special Materials</strong> list in the menu (we do not accept silk, leather, wool, blazers, or dry-clean-only items).<br>• In the rare event of damage or loss to standard wash-and-fold clothes caused by our service, we will compensate based on the actual value of the item or up to a maximum of 500,000 VND per item. We sincerely appreciate your understanding and cooperation in helping us protect your garments!"
+          response: "💝 <strong>Nice Fold Cares for Your Clothes:</strong><br>• To ensure the highest level of care, we specialize in standard Wash & Fold. Please review our <strong>⚠️ Special Materials</strong> list in the menu (we do not accept silk, leather, wool, blazers, or dry-clean-only items).<br>• In the rare event of damage or loss to standard wash-and-fold clothes caused by our service, we will compensate based on the actual value of the item or up to a maximum of 500,000 VND per item. We sincerely appreciate your understanding and cooperation in helping us protect your garments!"
         },
         {
           id: "color_bleed_query",
@@ -1363,19 +1528,7 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
           id: "dryclean_query",
           short: "🧺 Dry Clean & Ironing",
           keywords: ["dry clean", "dryclean", "drycleaning", "steam clean", "steam cleaning", "iron", "ironing", "giặt ủi", "giặt khô", "giat ui", "giat kho", "ủi", "ủi đồ", "leather jacket", "leather clothes", "leather clothing", "leather coat", "silk", "wool", "cashmere", "blazer", "blazers", "suit", "suits", "designer", "embellished", "dry clean only", "ao dai", "traditional dress", "spa", "restore", "restoration", "luxury", "wedding dress", "wedding gown", "wedding dresses", "puffer jacket", "puffer jackets", "down jacket", "down jackets"],
-          response: "⚠️ Sorry, Nice Fold **does not currently offer dry cleaning, steam cleaning, or individual ironing services**.<br>• **Details**: We specialize strictly in automated Wash & Fold (laundry by weight) and hand-wash shoe cleaning. Delicate or dry-clean-only garments such as <strong>suits, blazers, silk (including traditional Ao Dai), leather, wool, cashmere, wedding dresses, down/puffer jackets, or heavily embellished items...</strong> require specialized dry cleaning or hand-wash care to prevent fabric damage or loss of shape.<br>• To protect your special garments, we are unable to accept them for cleaning. We appreciate your kind understanding!"
-        },
-        {
-          id: "leather_shoes_query",
-          short: "👟 Leather Shoes",
-          keywords: ["leather shoe", "leather shoes", "suede shoe", "suede shoes", "leather sneaker", "leather sneakers"],
-          response: "👟 <strong>Leather Shoes Cleaning</strong>: Yes, we do! We offer professional hand-detailed cleaning for premium leather and suede shoes at <strong>220,000 VND / pair</strong> (round-trip delivery fee is 50,000 VND)."
-        },
-        {
-          id: "shoes_query",
-          short: "👟 Shoes Cleaning Price",
-          keywords: ["shoe", "shoes", "sneaker", "sneakers", "giày", "giay", "giặt giày", "giat giay"],
-          response: "Our professional hand-detailed shoes cleaning price:<br>• Sneakers & Canvas: 150,000 VND / pair<br>• Premium Leather & Suede: 220,000 VND / pair<br>• Express 24h: +100,000 VND / pair<br>• Delivery fee: 50,000 VND round-trip."
+          response: "⚠️ Sorry, Nice Fold **does not currently offer dry cleaning, steam cleaning, or individual ironing services**.<br>• **Details**: We specialize strictly in automated Wash & Fold (laundry by weight) and professional bedding/curtains cleaning. Delicate or dry-clean-only garments such as <strong>suits, blazers, silk (including traditional Ao Dai), leather, wool, cashmere, wedding dresses, down/puffer jackets, or heavily embellished items...</strong> require specialized dry cleaning or hand-wash care to prevent fabric damage or loss of shape.<br>• To protect your special garments, we are unable to accept them for cleaning. We appreciate your kind understanding!"
         },
         {
           id: "flight_checkout_query",
@@ -1556,7 +1709,7 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
         },
         other: {
           title: "Dịch vụ khác",
-          details: "<strong>Dịch vụ vệ sinh cao cấp khác</strong>:<br>• <strong>Giặt giày</strong>: Giặt tay chuyên sâu (Giày thể thao & Vải: 150.000 VND / đôi | Da & Da lộn: 220.000 VND / đôi. Hỏa tốc 24h: +100.000 VND / đôi. Phí ship: 50.000 VND khứ hồi).<br>• <strong>Tấm bảo vệ nệm (Topper)</strong>: 60.000 VND / kg (giao nhận 24h).<br>• <strong>Rèm cửa</strong>: 50.000 VND / kg.<br>• <strong>Chăn ga gối nệm</strong>: 40.000 VND / kg (tối thiểu 3kg)."
+          details: "<strong>Dịch vụ vệ sinh cao cấp khác</strong>:<br>• <strong>Giặt giày</strong>: Giặt tay chuyên sâu (Giày thể thao & Vải: 150.000 VND / đôi | Da & Da lộn: 220.000 VND / đôi. Hỏa tốc 24h: +100.000 VND / đôi. Phí ship: 50.000 VND khứ hồi).<br>• <strong>Tấm bảo vệ nệm (Topper)</strong>: Theo size (1m2-1m4: 229k | 1m6-1m8: 279k | 1m8-2m: 299k | 2m-2m2: 379k).<br>• <strong>Rèm cửa & Thảm</strong>: 60.000 VND / kg.<br>• <strong>Chăn ga gối nệm</strong>: 60.000 VND / kg (tối thiểu 2kg)."
         }
       },
       questions: [
@@ -2143,7 +2296,8 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
                salesScript[bookingSession.lang].packages.sameday.title,
       whites: localScript.whitesNo,
       phone: localScript.notProvided,
-      mapLink: ''
+      mapLink: '',
+      weight: null
     };
 
     // 1. Extract Pickup Time
@@ -2167,16 +2321,31 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
       }
     }
 
-    // 3. Extract Separate Whites
-    const whitesRegex = /(yes|no|separate|white|whit|color|có|không|tách|trắng|dơ|màu)\s*(clothes|whithes)?/i;
-    const whitesMatch = text.match(whitesRegex);
-    if (whitesMatch) {
-      const wText = whitesMatch[0].toLowerCase();
-      if (wText.includes('yes') || wText.includes('có') || wText.includes('separate') || wText.includes('tách') || wText.includes('white') || wText.includes('trắng')) {
-        result.whites = localScript.whitesYes;
-      } else {
-        result.whites = localScript.whitesNo;
+    // 3. Extract Separate Whites (safe line-by-line parsing to avoid matching template prompt words)
+    let whitesVal = localScript.whitesNo;
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const lowerLine = line.toLowerCase();
+      if (lowerLine.includes('white') || lowerLine.includes('trắng') || lowerLine.includes('whites') || lowerLine.includes('6️⃣') || lowerLine.includes('7️⃣')) {
+        const answerPart = lowerLine.includes('?') ? lowerLine.split('?')[1] : (lowerLine.includes(':') ? lowerLine.split(':')[1] : lowerLine);
+        if (answerPart) {
+          if (answerPart.includes('yes') || answerPart.includes('có') || answerPart.includes('separate') || answerPart.includes('tách') || answerPart.includes('y')) {
+            whitesVal = localScript.whitesYes;
+            break;
+          } else if (answerPart.includes('no') || answerPart.includes('không') || answerPart.includes('n')) {
+            whitesVal = localScript.whitesNo;
+            break;
+          }
+        }
       }
+    }
+    result.whites = whitesVal;
+
+    // Extract Weight if present in text
+    const weightRegex = /(\d+(\.\d+)?)\s*(kg|kg\b|kilo)/i;
+    const weightMatch = text.match(weightRegex);
+    if (weightMatch) {
+      result.weight = parseFloat(weightMatch[1]);
     }
 
     // 4. Extract Pickup Option (if provided)
@@ -2384,18 +2553,33 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
     const localScript = salesScript[bookingSession.lang];
 
     // Estimate total cước
-    let totalVnd = 170000;
     const serviceClean = parsed.service.toLowerCase();
+    let rateConfig = RATES.sameday;
     if (serviceClean.includes('same-day') || serviceClean.includes('sameday') || serviceClean.includes('trong ngày')) {
-      totalVnd = 250000;
+      rateConfig = RATES.sameday;
     } else if (serviceClean.includes('express') || serviceClean.includes('hỏa tốc')) {
-      totalVnd = 330000;
+      rateConfig = RATES.express;
     } else if (serviceClean.includes('giày') || serviceClean.includes('shoe')) {
-      totalVnd = 150000;
+      rateConfig = RATES.shoes;
+    } else if (serviceClean.includes('standard') || serviceClean.includes('tiêu chuẩn')) {
+      rateConfig = RATES.standard;
     }
-    if (parsed.whites === localScript.whitesYes) {
-      totalVnd += 30000;
+
+    let weight = parsed.weight || rateConfig.minWeight;
+    if (weight < rateConfig.minWeight) {
+      weight = rateConfig.minWeight;
     }
+
+    let totalVnd = weight * rateConfig.price;
+    // Add flat shipping fee of 50k (or 0 for self service if they mentioned it, default 50k)
+    let shipFee = 50000;
+    if (parsed.option && (parsed.option.toLowerCase().includes('self') || parsed.option.toLowerCase().includes('tự'))) {
+      shipFee = 0;
+    }
+    totalVnd += shipFee;
+
+    const surchargeVnd = parsed.whites === localScript.whitesYes ? 30000 : 0;
+    totalVnd += surchargeVnd;
 
     // Generate unique booking code
     const bookingCode = 'NF' + Math.floor(1000 + Math.random() * 9000);
@@ -2429,7 +2613,11 @@ ${parsed.mapLink ? `📍 Google Maps: ${parsed.mapLink}\n` : ''}4️⃣ ${localS
         roomNumber: parsed.room,
         mapLink: parsed.mapLink,
         service: parsed.service,
-        totalVnd: totalVnd
+        weight: weight,
+        shipFee: shipFee,
+        surcharge: surchargeVnd,
+        totalVnd: totalVnd,
+        separateWhites: parsed.whites === localScript.whitesYes ? 'Yes' : 'No'
       })
     })
     .then(res => res.json())
