@@ -2046,10 +2046,10 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
     
     containerEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 0.6rem; width: 100%;">
-        <a href="${waLink}" target="_blank" class="pill-button btn-whatsapp" style="display: flex; justify-content: center; align-items: center; text-decoration: none; font-weight: 800; font-size: 0.85rem; padding: 0.75rem 1rem; width: 100%;">
+        <button type="button" class="pill-button btn-whatsapp" style="display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 0.85rem; padding: 0.75rem 1rem; border: none; width: 100%; cursor: pointer;">
           ${waLabel}
-        </a>
-        <button id="zaloCopyBtn" type="button" class="pill-button btn-zalo" style="display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 0.85rem; padding: 0.75rem 1rem; border: none; width: 100%;">
+        </button>
+        <button id="zaloCopyBtn" type="button" class="pill-button btn-zalo" style="display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 0.85rem; padding: 0.75rem 1rem; border: none; width: 100%; cursor: pointer;">
           ${zaloLabel}
         </button>
       </div>
@@ -2058,7 +2058,16 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
     chatbotBody.appendChild(containerEl);
     chatbotBody.scrollTop = chatbotBody.scrollHeight;
 
-    // Attach copy-paste event to Zalo button
+    // Attach click events with conversion tracking
+    const waBtn = containerEl.querySelector('.btn-whatsapp');
+    if (waBtn) {
+      waBtn.addEventListener('click', () => {
+        window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+          window.open(waLink, '_blank');
+        });
+      });
+    }
+    
     const zaloBtn = document.getElementById('zaloCopyBtn');
     if (zaloBtn) {
       zaloBtn.addEventListener('click', () => {
@@ -2067,9 +2076,13 @@ ${mapLink ? `📍 Map: ${mapLink}\n` : ''}🚪 Room Number: ${roomNumber}
             '📝 Thông tin đặt lịch đã được sao chép vào bộ nhớ tạm!\n\nĐang mở Zalo. Vui lòng dán (paste) nội dung đã sao chép vào khung chat Zalo với chúng tôi.' :
             '📝 Booking details copied to clipboard!\n\nOpening Zalo now. Please paste the copied text into our Zalo chat.';
           alert(alertMsg);
-          window.open('https://zalo.me/0373991602', '_blank');
+          window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+            window.open('https://zalo.me/0373991602', '_blank');
+          });
         }).catch(err => {
-          window.open('https://zalo.me/0373991602', '_blank');
+          window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+            window.open('https://zalo.me/0373991602', '_blank');
+          });
         });
       });
     }
@@ -2766,7 +2779,13 @@ window.triggerCheckoutModal = function(amount, desc, serviceLabel, pickupTimeStr
           '📝 Thông tin đặt lịch đã được sao chép vào bộ nhớ tạm!\n\nĐang mở Zalo. Vui lòng dán (paste) nội dung đã sao chép vào khung chat Zalo với chúng tôi để xác nhận đơn.' :
           '📝 Booking details copied to clipboard!\n\nOpening Zalo now. Please paste the copied text into our Zalo chat to confirm your booking.';
         alert(alertMsg);
-        window.open('https://zalo.me/0373991602', '_blank');
+        window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+          window.open('https://zalo.me/0373991602', '_blank');
+        });
+      }).catch(err => {
+        window.reportGoogleAdsConversion('AW-18164006468/YEAgCOu5rtIcEMT8otVD', () => {
+          window.open('https://zalo.me/0373991602', '_blank');
+        });
       });
     };
   }
