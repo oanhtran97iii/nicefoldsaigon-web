@@ -412,7 +412,9 @@ document.addEventListener('DOMContentLoaded', () => {
     "Deep cleaning & complete machine dry": "Làm sạch sâu & sấy khô hoàn toàn bằng máy",
     "Deep cleaning and sanitizing for mattress protectors and toppers of all sizes. Assured complete deep drying to prevent internal mildew.": "Làm sạch sâu và khử trùng cho tấm bảo vệ nệm và topper mọi kích thước. Đảm bảo sấy khô hoàn toàn bên trong để ngăn ngừa ẩm mốc.",
     "Curtains & Carpets": "Rèm cửa & Thảm trải sàn",
-    "Minimum order: 1kg (~$2.40 USD/kg)": "Tối thiểu: 1kg (~2.40 USD/kg)",
+    "Under 2kg": "Dưới 2kg",
+    "Over 2kg": "Trên 2kg",
+    "* Minimum weight is 2kg": "* Số ký tối thiểu là 2kg",
     "Specialist washing for household curtains, drapes, and area carpets. Removes dust, odors, and environmental allergens safely.": "Giặt chuyên nghiệp cho rèm cửa và thảm trải sàn. Loại bỏ bụi bẩn, mùi hôi và các tác nhân gây dị ứng một cách an toàn.",
     "Ready for Fresh Bedding?": "Bạn đã sẵn sàng cho một chiếc giường sạch thơm?",
     "Schedule a pickup appointment for your linens, sheets, or toppers today. Free round-trip collection directly at your lobby.": "Đặt lịch lấy chăn drap, vỏ ga hoặc topper của bạn ngay hôm nay. Giao nhận hai chiều miễn phí trực tiếp tại sảnh.",
@@ -555,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     topper_medium: { price: 270000, minWeight: 1, label: 'Topper Clean 1m6-1m8', unit: 'piece', isPerItem: true },
     topper_large: { price: 290000, minWeight: 1, label: 'Topper Clean 1m8-2m', unit: 'piece', isPerItem: true },
     topper_xlarge: { price: 370000, minWeight: 1, label: 'Topper Clean 2m-2m2', unit: 'piece', isPerItem: true },
-    curtain: { price: 60000, minWeight: 1, label: 'Curtain Cleaning', unit: 'kg' },
+    curtain: { price: 60000, minWeight: 2, label: 'Curtain Cleaning', unit: 'kg' },
     bedding: { price: 60000, minWeight: 2, label: 'Beddings & Linens', unit: 'kg' }
   };
 
